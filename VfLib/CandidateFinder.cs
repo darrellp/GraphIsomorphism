@@ -32,9 +32,9 @@ namespace vflibcs
 			_vfs = vfs;
 
 			if (
-				!vfs.fnCmp(vfs.LstOut1.Count, vfs.LstOut2.Count) ||
-				!vfs.fnCmp(vfs.LstIn1.Count, vfs.LstIn2.Count) ||
-				!vfs.fnCmp(vfs.LstDisconnected1.Count, vfs.LstDisconnected2.Count))
+				!vfs.FnCmp(vfs.LstOut1.Count, vfs.LstOut2.Count) ||
+				!vfs.FnCmp(vfs.LstIn1.Count, vfs.LstIn2.Count) ||
+				!vfs.FnCmp(vfs.LstDisconnected1.Count, vfs.LstDisconnected2.Count))
 			{
 				_fFailImmediately = true;
 				return;
@@ -68,7 +68,7 @@ namespace vflibcs
 			// since we order the nodes by total degree size, when we fail this condition, we know that
 			// there are no further nodes in graph1 which will match the current graph2 node so we can
 			// abandon the search.
-			return _vfs.fnCmp(_vfs.Vfgr1.InDegree(inod1) + _vfs.Vfgr1.OutDegree(inod1), _totalDegree2);
+			return _vfs.FnCmp(_vfs.Vfgr1.InDegree(inod1) + _vfs.Vfgr1.OutDegree(inod1), _totalDegree2);
 		}
 
 		internal Match NextCandidateMatch()
