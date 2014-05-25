@@ -32,9 +32,9 @@ namespace vflibcs
 			_vfs = vfs;
 
 			if (
-				!vfs.FnCmp(vfs.LstOut1.Count, vfs.LstOut2.Count) ||
-				!vfs.FnCmp(vfs.LstIn1.Count, vfs.LstIn2.Count) ||
-				!vfs.FnCmp(vfs.LstDisconnected1.Count, vfs.LstDisconnected2.Count))
+				!vfs.FnCompareDegrees(vfs.LstOut1.Count, vfs.LstOut2.Count) ||
+				!vfs.FnCompareDegrees(vfs.LstIn1.Count, vfs.LstIn2.Count) ||
+				!vfs.FnCompareDegrees(vfs.LstDisconnected1.Count, vfs.LstDisconnected2.Count))
 			{
 				_fFailImmediately = true;
 				return;
@@ -68,7 +68,7 @@ namespace vflibcs
 			// since we order the nodes by total degree size, when we fail this condition, we know that
 			// there are no further nodes in graph1 which will match the current graph2 node so we can
 			// abandon the search.
-			return _vfs.FnCmp(_vfs.Vfgr1.InDegree(inod1) + _vfs.Vfgr1.OutDegree(inod1), _totalDegree2);
+			return _vfs.FnCompareDegrees(_vfs.Vfgr1.InDegree(inod1) + _vfs.Vfgr1.OutDegree(inod1), _totalDegree2);
 		}
 
 		internal Match NextCandidateMatch()
@@ -134,9 +134,9 @@ namespace vflibcs
 			[Test]
 			public void TestConstructor()
 			{
-				VfState vfs = VfsTest();
+				var vfs = VfsTest();
 				var cf = new CandidateFinder(vfs);
-				Match mch = cf.NextCandidateMatch();
+				var mch = cf.NextCandidateMatch();
 				Assert.AreEqual(0, mch.Inod1);
 				Assert.AreEqual(0, mch.Inod2);
 				mch = cf.NextCandidateMatch();

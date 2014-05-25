@@ -17,11 +17,11 @@ namespace vflibcs
 		readonly Action _act;
 		readonly int _iGraph;
 		readonly int _inod;
-		readonly Groups _grpRestore;
+		readonly Group _grpRestore;
 		#endregion
 
 		#region Constructor
-		internal BacktrackAction(Action act, int iGraph, int inod, Groups grpRestore = 0)
+		internal BacktrackAction(Action act, int iGraph, int inod, Group grpRestore = 0)
 		{
 			_act = act;
 			_iGraph = iGraph;
@@ -93,7 +93,7 @@ namespace vflibcs
 			public void TestConstructor()
 			{
 				Assert.IsNotNull(new BacktrackAction(Action.DeleteMatch, 1, 0));
-				Assert.IsNotNull(new BacktrackAction(Action.GroupMove, 1, 0, Groups.FromMapping));
+				Assert.IsNotNull(new BacktrackAction(Action.GroupMove, 1, 0, Group.FromMapping));
 			}
 		}
 #endif

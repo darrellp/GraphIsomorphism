@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace vflibcs
 {
@@ -17,36 +18,33 @@ namespace vflibcs
 		#endregion
 
 		#region Permutation
+		// Return a permutation of node positions so that the corresponding nodes are ordered
+		// from highest total degree to lowest
 		internal int[] Permutation
 		{
 			get
 			{
-				var mpInodInodPermuted = new int[_loader.NodeCount];
-				IComparer<int> icmpDegree = new CmpNodeDegrees(_loader);
-
-				for (var i = 0; i < _loader.NodeCount; i++)
-				{
-					mpInodInodPermuted[i] = i;
-				}
-
-				Array.Sort(mpInodInodPermuted, icmpDegree);
+				var mpInodInodPermuted = Enumerable.Range(0, _loader.NodeCount).ToArray();
+				Array.Sort(mpInodInodPermuted, this);
 				return mpInodInodPermuted;
 			}
 		}
 		#endregion
 
 		#region IComparer<vfnNode> Members
+		// Sorts positions in _loader so their corresponding vertices run from
+		// highest total degree to lowest
 		public int Compare(int x, int y)
 		{
 			if (x == y)
 			{
 				return 0;
 			}
-			int nidX = _loader.IdFromPos(x);
-			int nidY = _loader.IdFromPos(y);
-			int xDegree = _loader.InEdgeCount(nidX) + _loader.OutEdgeCount(nidX);
-			int yDegree = _loader.InEdgeCount(nidY) + _loader.OutEdgeCount(nidY);
-			return xDegree < yDegree ? 1 : -1;
+			var nidX = _loader.IdFromPos(x);
+			var nidY = _loader.IdFromPos(y);
+			var xDegree = _loader.InEdgeCount(nidX) + _loader.OutEdgeCount(nidX);
+			var yDegree = _loader.InEdgeCount(nidY) + _loader.OutEdgeCount(nidY);
+			return yDegree.CompareTo(xDegree); //xDegree < yDegree ? 1 : -1);
 		}
 		#endregion
 	}

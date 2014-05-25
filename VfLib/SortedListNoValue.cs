@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace vflibcs
 {
-	class SortedListNoKey<T>
+	class SortedListNoValue<T>
 	{
 		#region Private Variables
 		readonly SortedList<T, byte> _srtlst = new SortedList<T, byte>();

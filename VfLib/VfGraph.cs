@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 #if NUNIT
 using NUnit.Framework;
 #endif
@@ -48,12 +49,12 @@ namespace vflibcs
 			return _arNodes[inod].InNeighbors;
 		}
 
-		internal Groups GetGroup(int inod)
+		internal Group GetGroup(int inod)
 		{
 			return _arNodes[inod].Grps;
 		}
 
-		internal void SetGroup(int inod, Groups grps)
+		internal void SetGroup(int inod, Group grps)
 		{
 			_arNodes[inod].Grps = grps;
 		}
@@ -67,21 +68,20 @@ namespace vflibcs
 		#region Constructor
 		internal static int[] ReversePermutation(int[] perm)
 		{
-			var permOut = new int[perm.Length];
-			for (int i = 0; i < perm.Length; i++)
-			{
-				permOut[i] = Array.IndexOf(perm, i);
-			}
-			return permOut;
+			return Enumerable.Range(0, perm.Length).Select(i => Array.IndexOf(perm, i)).ToArray();
 		}
 
-		internal VfGraph(IGraphLoader loader, int[] mpInodVfInodGraph)
+		internal VfGraph(IGraphLoader loader, int[] mpInodVfInodGraph = null)
 		{
+			if (mpInodVfInodGraph == null)
+			{
+				mpInodVfInodGraph = (new CmpNodeDegrees(loader)).Permutation;
+			}
 			_arNodes = new VfnNode[loader.NodeCount];
-			int[] mpInodGraphInodVf = ReversePermutation(mpInodVfInodGraph);
+			var mpInodGraphInodVf = ReversePermutation(mpInodVfInodGraph);
 			var dctEdge = new Dictionary<VfeNode, VfeNode>();
 
-			for (int inodVf = 0; inodVf < loader.NodeCount; inodVf++)
+			for (var inodVf = 0; inodVf < loader.NodeCount; inodVf++)
 			{
 				_arNodes[inodVf] = new VfnNode(loader, mpInodVfInodGraph[inodVf], dctEdge, mpInodGraphInodVf);
 			}
@@ -113,7 +113,7 @@ namespace vflibcs
 				graph.InsertEdge(5, 2);
 				graph.InsertEdge(2, 4);
 
-				return new VfGraph(graph, (new CmpNodeDegrees(graph)).Permutation);
+				return new VfGraph(graph);
 			}
 
 			[Test]
@@ -125,9 +125,7 @@ namespace vflibcs
 				Assert.AreEqual(2, graph.InsertNode());
 				graph.InsertEdge(1, 0);
 				graph.InsertEdge(1, 2);
-				int[] mpPermutation = (new CmpNodeDegrees(graph)).Permutation;
-				var vfg = new VfGraph(graph, mpPermutation);
-				Assert.AreEqual(mpPermutation[1], 0);
+				var vfg = new VfGraph(graph);
 				var arOut = new int[vfg._arNodes[0].OutNeighbors.Count];
 				vfg._arNodes[0].OutNeighbors.CopyTo(arOut, 0);
 				var inodNeighbor1 = arOut[0];

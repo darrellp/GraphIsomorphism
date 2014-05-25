@@ -5,40 +5,77 @@ using NUnit.Framework;
 
 namespace vflibcs
 {
+	/// <summary>
+	/// As we mess with the state we need to keep track of what we do so when
+	/// we backtrack we can undo.  This is the purpose of the BacktrackRecord.
+	/// There are only two actions taken in the course of a backtrack record -
+	/// matching nodes and reclassifying nodes into different groups.
+	/// </summary>
 	class BacktrackRecord
 	{
 		#region Private Variables
+		// List of actions to be undone on backtrack
 		readonly List<BacktrackAction> _lstActions = new List<BacktrackAction>();
 		#endregion
 
 		#region Actions
+		// Add an action to potentially be undone later
 		internal void AddAction(BacktrackAction act)
 		{
 			_lstActions.Insert(0, act);
 		}
 
+		/// <summary>
+		/// Propose to map inod1 from the first graph to inod2 in the second for
+		/// the isomorphism being formed
+		/// </summary>
+		/// <param name="inod1">Node index in the first graph</param>
+		/// <param name="inod2">Node index in the second graph</param>
+		/// <param name="vfs">State determining the isomorphism</param>
 		internal void SetMatch(int inod1, int inod2, VfState vfs)
 		{
-			MoveToGroup(1, inod1, Groups.ContainedInMapping, vfs);
-			MoveToGroup(2, inod2, Groups.ContainedInMapping, vfs);
+			// Add both nodes to the "In Mapping" group
+			MoveToGroup(1, inod1, Group.ContainedInMapping, vfs);
+			MoveToGroup(2, inod2, Group.ContainedInMapping, vfs);
 
-			vfs.SetMapping(inod1, inod2);
+			// Actually set the nodes to correspond in the isomorphism
+			vfs.SetIsomorphic(inod1, inod2);
 
 			// Add actions to undo this act...
 			AddAction(new BacktrackAction(Action.DeleteMatch, 1, inod1));
 			AddAction(new BacktrackAction(Action.DeleteMatch, 2, inod2));
 		}
 
-		internal void MoveToGroup(int iGraph, int inod, Groups grpNew, VfState vfs)
+		/// <summary>
+		/// Move node to one of the four classifications:
+		///		+ unconnected to any node in isomorphism
+		///		+ points in to node in isomorphism
+		///		+ pointed to be a node in isomorphism
+		///		+ in the isomorphism
+		/// Note that this call may be redundant - i.e., we may "move" a node
+		/// to a group it's already in.  That's expected and we don't actually do
+		/// anything in that case.
+		/// </summary>
+		/// <param name="iGraph">Graph to take action on</param>
+		/// <param name="inod">Node index of node to act on</param>
+		/// <param name="grpNew">New group to potentially move node to</param>
+		/// <param name="vfs">State determining the isomorphism</param>
+ 
+		internal void MoveToGroup(int iGraph, int inod, Group grpNew, VfState vfs)
 		{
-			VfGraph vfg = iGraph == 1 ? vfs.Vfgr1 : vfs.Vfgr2;
-			Groups grpOld = vfg.GetGroup(inod);
+			var vfg = iGraph == 1 ? vfs.Vfgr1 : vfs.Vfgr2;
+			var grpOld = vfg.GetGroup(inod);
 
-			if (grpOld == Groups.FromMapping && grpNew == Groups.ToMapping ||
-				grpOld == Groups.ToMapping && grpNew == Groups.FromMapping)
+			// If node is newly connected to the isomorphism, see if it was connected
+			// in the opposite direction previously - if so, it's now connected both ways.
+			if (grpOld == Group.FromMapping && grpNew == Group.ToMapping ||
+				grpOld == Group.ToMapping && grpNew == Group.FromMapping)
 			{
-				grpNew = Groups.FromMapping | Groups.ToMapping;
+				grpNew = Group.FromMapping | Group.ToMapping;
 			}
+
+			// If we actually made a change, then add it to the action list and ensure that
+			// it's recorded in the graph.
 			if (grpOld != (grpOld | grpNew))
 			{
 				AddAction(new BacktrackAction(Action.GroupMove, iGraph, inod, grpOld));
@@ -48,12 +85,13 @@ namespace vflibcs
 		#endregion
 
 		#region Backtracking
+		/// <summary>
+		/// Undo the actions taken for this backtrack record
+		/// </summary>
+		/// <param name="vfs">State to undo the actions in</param>
 		internal void Backtrack(VfState vfs)
 		{
-			foreach (BacktrackAction act in _lstActions)
-			{
-				act.Backtrack(vfs);
-			}
+			_lstActions.ForEach(action => action.Backtrack(vfs));
 		}
 		#endregion
 
@@ -108,25 +146,25 @@ namespace vflibcs
 			[Test]
 			public void TestMatchBacktrack()
 			{
-				VfState vfs = VfsTest();
+				var vfs = VfsTest();
 				var btr = new BacktrackRecord();
 
 				btr.SetMatch(0, 1, vfs);
-				Groups grp1 = vfs.Vfgr1.GetGroup(0);
-				Groups grp2 = vfs.Vfgr2.GetGroup(1);
+				var grp1 = vfs.Vfgr1.GetGroup(0);
+				var grp2 = vfs.Vfgr2.GetGroup(1);
 
-				Assert.IsTrue((((int)grp1 & (int)Groups.ContainedInMapping)) != 0);
-				Assert.IsTrue((((int)grp2 & (int)Groups.ContainedInMapping)) != 0);
-				Assert.AreEqual(Groups.ContainedInMapping, vfs.Vfgr1.GetGroup(0));
-				Assert.AreEqual(Groups.ContainedInMapping, vfs.Vfgr2.GetGroup(1));
+				Assert.IsTrue((((int)grp1 & (int)Group.ContainedInMapping)) != 0);
+				Assert.IsTrue((((int)grp2 & (int)Group.ContainedInMapping)) != 0);
+				Assert.AreEqual(Group.ContainedInMapping, vfs.Vfgr1.GetGroup(0));
+				Assert.AreEqual(Group.ContainedInMapping, vfs.Vfgr2.GetGroup(1));
 				btr.Backtrack(vfs);
 				grp1 = vfs.Vfgr1.GetGroup(0);
 				grp2 = vfs.Vfgr2.GetGroup(1);
 
-				Assert.IsFalse((((int)grp1 & (int)Groups.ContainedInMapping)) != 0);
-				Assert.IsFalse((((int)grp2 & (int)Groups.ContainedInMapping)) != 0);
-				Assert.AreEqual(Groups.Disconnected, vfs.Vfgr1.GetGroup(0));
-				Assert.AreEqual(Groups.Disconnected, vfs.Vfgr2.GetGroup(1));
+				Assert.IsFalse((((int)grp1 & (int)Group.ContainedInMapping)) != 0);
+				Assert.IsFalse((((int)grp2 & (int)Group.ContainedInMapping)) != 0);
+				Assert.AreEqual(Group.Disconnected, vfs.Vfgr1.GetGroup(0));
+				Assert.AreEqual(Group.Disconnected, vfs.Vfgr2.GetGroup(1));
 			}
 		}
 #endif

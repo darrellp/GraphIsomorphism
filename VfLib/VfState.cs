@@ -37,7 +37,6 @@ namespace vflibcs
 	internal class VfState
 	{
 		#region Private Variables
-		private VfGraph _vfgr1, _vfgr2;
 		internal const int MapIllegal = -1;
 
 		// Mapping between node positions in VfGraph and the original Graph.
@@ -58,21 +57,11 @@ namespace vflibcs
 		private readonly IGraphLoader _ldr2;
 
 		// The actual mappings we're building up
-		private readonly int[] _arinodMap1To2;
-		private readonly int[] _arinodMap2To1;
+		private readonly int[] _isomorphism1To2;
+		private readonly int[] _isomorphism2To1;
 
 		// All the mappings we've located thus far...
 		private readonly List<FullMapping> _lstMappings = new List<FullMapping>();
-
-		// The following lists are sorted on index but since the
-		// original nodes were sorted by degree, that means that
-		// these are also sorted by degree which is the key.
-		private SortedListNoKey<int> _lstIn1 = new SortedListNoKey<int>();
-		private SortedListNoKey<int> _lstOut1 = new SortedListNoKey<int>();
-		private SortedListNoKey<int> _lstIn2 = new SortedListNoKey<int>();
-		private SortedListNoKey<int> _lstOut2 = new SortedListNoKey<int>();
-		private SortedListNoKey<int> _lstDisconnected1 = new SortedListNoKey<int>();
-		private SortedListNoKey<int> _lstDisconnected2 = new SortedListNoKey<int>();
 
 		private int _inDegreeTotal1, _inDegreeTotal2, _outDegreeTotal1, _outDegreeTotal2;
 
@@ -148,19 +137,19 @@ namespace vflibcs
 			var armpInodGraphInodVf2 = VfGraph.ReversePermutation(_armpInodVfInodGraph2);
 
 			// Holding areas for new permutations
-			_armpNid1Nid2 = new int[_arinodMap1To2.Length];
-			_armpNid2Nid1 = new int[_arinodMap2To1.Length];
+			_armpNid1Nid2 = new int[_isomorphism1To2.Length];
+			_armpNid2Nid1 = new int[_isomorphism2To1.Length];
 
-			for (var i = 0; i < _arinodMap1To2.Length; i++)
+			for (var i = 0; i < _isomorphism1To2.Length; i++)
 			{
-				var inodMap = _arinodMap1To2[armpInodGraphInodVf1[i]];
+				var inodMap = _isomorphism1To2[armpInodGraphInodVf1[i]];
 				_armpNid1Nid2[i] = (inodMap == MapIllegal ? MapIllegal : _ldr2.IdFromPos(_armpInodVfInodGraph2[inodMap]));
 			}
 
-			for (var i = 0; i < _arinodMap2To1.Length; i++)
+			for (var i = 0; i < _isomorphism2To1.Length; i++)
 			{
 				// Shouldn't be any map_illegal values in the second graph's array
-				_armpNid2Nid1[i] = _ldr1.IdFromPos(_armpInodVfInodGraph1[_arinodMap2To1[armpInodGraphInodVf2[i]]]);
+				_armpNid2Nid1[i] = _ldr1.IdFromPos(_armpInodVfInodGraph1[_isomorphism2To1[armpInodGraphInodVf2[i]]]);
 			}
 		}
 
@@ -196,8 +185,8 @@ namespace vflibcs
 
 		private void MassagePermutationList()
 		{
-			var count1 = _arinodMap1To2.Length;
-			var count2 = _arinodMap2To1.Length;
+			var count1 = _isomorphism1To2.Length;
+			var count2 = _isomorphism2To1.Length;
 
 			// Permutations to move from VfGraph inods to Graph inods
 			var armpInodGraphInodVf1 = VfGraph.ReversePermutation(_armpInodVfInodGraph1);
@@ -213,74 +202,57 @@ namespace vflibcs
 			}
 		}
 
-		internal VfGraph Vfgr2
-		{
-			get { return _vfgr2; }
-			set { _vfgr2 = value; }
-		}
+		// The two graphs we're comparing
+		internal VfGraph Vfgr2 { get; set; }
+		internal VfGraph Vfgr1 { get; set; }
 
-		internal VfGraph Vfgr1
-		{
-			get { return _vfgr1; }
-			set { _vfgr1 = value; }
-		}
+		// Lists of nodes not yet participating in the current isomorphism
+		// These lists are sorted on index but since the original nodes were
+		// sorted by degree, that means that these are also sorted by degree
+		// which is a key performance heuristic.
 
-		internal SortedListNoKey<int> LstIn1
-		{
-			get { return _lstIn1; }
-			set { _lstIn1 = value; }
-		}
 
-		internal SortedListNoKey<int> LstOut1
-		{
-			get { return _lstOut1; }
-			set { _lstOut1 = value; }
-		}
+		// Nodes that point into the current isomorphism set without participating in it
+		internal SortedListNoValue<int> LstIn1 { get; set; }
+		internal SortedListNoValue<int> LstIn2 { get; set; }
 
-		internal SortedListNoKey<int> LstIn2
-		{
-			get { return _lstIn2; }
-			set { _lstIn2 = value; }
-		}
+		// Nodes that point out of the current isomorphism set without participating in it
+		internal SortedListNoValue<int> LstOut1 { get; set; }
+		internal SortedListNoValue<int> LstOut2 { get; set; }
 
-		internal SortedListNoKey<int> LstOut2
-		{
-			get { return _lstOut2; }
-			set { _lstOut2 = value; }
-		}
-
-		internal SortedListNoKey<int> LstDisconnected1
-		{
-			get { return _lstDisconnected1; }
-			set { _lstDisconnected1 = value; }
-		}
-
-		internal SortedListNoKey<int> LstDisconnected2
-		{
-			get { return _lstDisconnected2; }
-			set { _lstDisconnected2 = value; }
-		}
+		// Nodes that are not connected with any node in the current isomorphism candidate
+		internal SortedListNoValue<int> LstDisconnected1 { get; set; }
+		internal SortedListNoValue<int> LstDisconnected2 { get; set; }
 		#endregion
 
 		#region Delegates
-		internal delegate bool FCompareDegreesDelegate(int degree1, int degree2);
+		internal readonly Func<int, int, bool> FnCompareDegrees;
 
-		internal FCompareDegreesDelegate FnCmp;
-
+		// In a straight isomorphism degrees of matching nodes must match exactly
 		private static bool CmpIsomorphism(int degree1, int degree2)
 		{
 			return degree1 == degree2;
 		}
 
-		private static bool CmpSubgraphIsomorphism(int degree1, int degree2)
+		// In a subgraph isomorphism, nodes in the original graph may have lower degree
+		// than nodes in the subgraph since the subgraph is embedded in the "supergraph"
+		// which may have nodes connecting to the subgraph increasing the degree of nodes
+		// in the subgraph.
+		private static bool CmpSubgraphIsomorphism(int degreeSubgraph, int degreeOriginal)
 		{
-			return degree1 >= degree2;
+			return degreeSubgraph >= degreeOriginal;
 		}
 		#endregion
 
 		#region Constructors
-		public VfState(IGraphLoader loader1, IGraphLoader loader2, bool fIsomorphism, bool fContextCheck, bool fFindAll)
+		public VfState(IGraphLoader loader1, IGraphLoader loader2, bool fIsomorphism = false, bool fContextCheck = false, bool fFindAll = false)
 		{
+			LstIn1 = new SortedListNoValue<int>();
+			LstOut1 = new SortedListNoValue<int>();
+			LstIn2 = new SortedListNoValue<int>();
+			LstOut2 = new SortedListNoValue<int>();
+			LstDisconnected2 = new SortedListNoValue<int>();
+			LstDisconnected1 = new SortedListNoValue<int>();
 			_ldr1 = loader1;
 			_ldr2 = loader2;
 
@@ -289,50 +261,36 @@ namespace vflibcs
 
 			if (fIsomorphism)
 			{
-				FnCmp = CmpIsomorphism;
+				FnCompareDegrees = CmpIsomorphism;
 			}
 			else
 			{
-				FnCmp = CmpSubgraphIsomorphism;
+				FnCompareDegrees = CmpSubgraphIsomorphism;
 			}
 
 			_armpInodVfInodGraph1 = new CmpNodeDegrees(loader1).Permutation;
 			_armpInodVfInodGraph2 = new CmpNodeDegrees(loader2).Permutation;
-			_vfgr1 = new VfGraph(loader1, _armpInodVfInodGraph1);
-			_vfgr2 = new VfGraph(loader2, _armpInodVfInodGraph2);
-			_arinodMap1To2 = new int[loader1.NodeCount];
-			_arinodMap2To1 = new int[loader2.NodeCount];
+			Vfgr1 = new VfGraph(loader1, _armpInodVfInodGraph1);
+			Vfgr2 = new VfGraph(loader2, _armpInodVfInodGraph2);
+			_isomorphism1To2 = new int[loader1.NodeCount];
+			_isomorphism2To1 = new int[loader2.NodeCount];
 			for (var i = 0; i < loader1.NodeCount; i++)
 			{
-				_arinodMap1To2[i] = MapIllegal;
-				_lstDisconnected1.Add(i);
+				_isomorphism1To2[i] = MapIllegal;
+				LstDisconnected1.Add(i);
 			}
 			for (var i = 0; i < loader2.NodeCount; i++)
 			{
-				_arinodMap2To1[i] = MapIllegal;
-				_lstDisconnected2.Add(i);
+				_isomorphism2To1[i] = MapIllegal;
+				LstDisconnected2.Add(i);
 			}
-		}
-
-		public VfState(IGraphLoader loader1, IGraphLoader loader2, bool fIsomorphism, bool fContextCheck)
-			: this(loader1, loader2, fIsomorphism, fContextCheck, false)
-		{
-		}
-
-		public VfState(IGraphLoader loader1, IGraphLoader loader2, bool fIsomorphism)
-			: this(loader1, loader2, fIsomorphism, false, false)
-		{
-		}
-
-		public VfState(IGraphLoader loader1, IGraphLoader loader2) : this(loader1, loader2, false, false, false)
-		{
 		}
 		#endregion
 
 		#region Matching
 		private bool FCompleteMatch()
 		{
-			return _lstDisconnected2.Count == 0 && _lstIn2.Count == 0 && _lstOut2.Count == 0;
+			return LstDisconnected2.Count == 0 && LstIn2.Count == 0 && LstOut2.Count == 0;
 		}
 
 #if RECURSIVE
@@ -384,14 +342,14 @@ namespace vflibcs
 #else
 		private bool FCompatibleDegrees()
 		{
-			if (!FnCmp(_vfgr1.NodeCount, _vfgr2.NodeCount))
+			if (!FnCompareDegrees(Vfgr1.NodeCount, Vfgr2.NodeCount))
 			{
 				return false;
 			}
 
-			for (var iNode = 0; iNode < _vfgr2.NodeCount; iNode++)
+			for (var iNode = 0; iNode < Vfgr2.NodeCount; iNode++)
 			{
-				if (!FnCmp(_vfgr1.TotalDegree(iNode), _vfgr2.TotalDegree(iNode)))
+				if (!FnCompareDegrees(Vfgr1.TotalDegree(iNode), Vfgr2.TotalDegree(iNode)))
 				{
 					return false;
 				}
@@ -401,7 +359,7 @@ namespace vflibcs
 
 		private void RecordCurrentMatch()
 		{
-			_lstMappings.Add(new FullMapping(_arinodMap1To2, _arinodMap2To1));
+			_lstMappings.Add(new FullMapping(_isomorphism1To2, _isomorphism2To1));
 		}
 
 		// Find an isomorphism between a subgraph of _vfgr1 and the entirity of _vfgr2...
@@ -430,7 +388,7 @@ namespace vflibcs
 
 			// Since the subgraph of subgraph isomorphism is in _vfgr1, it must have at
 			// least as many nodes as _vfgr2...
-			if (!FnCmp(_vfgr1.NodeCount, _vfgr2.NodeCount))
+			if (!FnCompareDegrees(Vfgr1.NodeCount, Vfgr2.NodeCount))
 			{
 				return false;
 			}
@@ -516,21 +474,22 @@ namespace vflibcs
 		#endregion
 
 		#region Mapping
-		internal void SetMapping(int inod1, int inod2)
+		internal void SetIsomorphic(int inod1, int inod2)
 		{
-			_arinodMap1To2[inod1] = inod2;
-			_arinodMap2To1[inod2] = inod1;
+			// Set the mapping in both directions
+			_isomorphism1To2[inod1] = inod2;
+			_isomorphism2To1[inod2] = inod1;
 		}
 
 		internal void RemoveFromMappingList(int iGraph, int inod)
 		{
-			var mp = iGraph == 1 ? _arinodMap1To2 : _arinodMap2To1;
+			var mp = iGraph == 1 ? _isomorphism1To2 : _isomorphism2To1;
 			mp[inod] = MapIllegal;
 		}
 		#endregion
 
 		#region Feasibility
-		private int GetGroupCountInList(IEnumerable<int> lstOfNodes, VfGraph vfgr, Groups grp)
+		private int GetGroupCountInList(IEnumerable<int> lstOfNodes, VfGraph vfgr, Group grp)
 		{
 			return lstOfNodes.Count(inod => ((int) vfgr.GetGroup(inod) & (int) grp) != 0);
 		}
@@ -540,7 +499,7 @@ namespace vflibcs
 		{
 			var cnodInMapping1 = 0;
 
-			foreach (var inodMap in lstConnected1.Select(inod => _arinodMap1To2[inod]).Where(inodMap => inodMap != MapIllegal))
+			foreach (var inodMap in lstConnected1.Select(inod => _isomorphism1To2[inod]).Where(inodMap => inodMap != MapIllegal))
 			{
 				cnodInMapping1++;
 				if (!lstConnected2.Contains(inodMap))
@@ -553,7 +512,7 @@ namespace vflibcs
 				}
 			}
 
-			if (cnodInMapping1 != GetGroupCountInList(lstConnected2, _vfgr2, Groups.ContainedInMapping))
+			if (cnodInMapping1 != GetGroupCountInList(lstConnected2, Vfgr2, Group.ContainedInMapping))
 			{
 				return false;
 			}
@@ -566,46 +525,46 @@ namespace vflibcs
 		{
 			var nodesIn1 = lstIn1 as List<int> ?? lstIn1.ToList();
 			var nodesIn2 = lstIn2 as List<int> ?? lstIn2.ToList();
-			if (!FnCmp(
-				GetGroupCountInList(nodesIn1, _vfgr1, Groups.FromMapping),
-				GetGroupCountInList(nodesIn2, _vfgr2, Groups.FromMapping)))
+			if (!FnCompareDegrees(
+				GetGroupCountInList(nodesIn1, Vfgr1, Group.FromMapping),
+				GetGroupCountInList(nodesIn2, Vfgr2, Group.FromMapping)))
 			{
 				return false;
 			}
 
 			var nodesOut1 = lstOut1 as List<int> ?? lstOut1.ToList();
 			var nodesOut2 = lstOut2 as List<int> ?? lstOut2.ToList();
-			if (!FnCmp(
-				GetGroupCountInList(nodesOut1, _vfgr1, Groups.FromMapping),
-				GetGroupCountInList(nodesOut2, _vfgr2, Groups.FromMapping)))
+			if (!FnCompareDegrees(
+				GetGroupCountInList(nodesOut1, Vfgr1, Group.FromMapping),
+				GetGroupCountInList(nodesOut2, Vfgr2, Group.FromMapping)))
 			{
 				return false;
 			}
 
-			if (!FnCmp(
-				GetGroupCountInList(nodesIn1, _vfgr1, Groups.ToMapping),
-				GetGroupCountInList(nodesIn2, _vfgr2, Groups.ToMapping)))
+			if (!FnCompareDegrees(
+				GetGroupCountInList(nodesIn1, Vfgr1, Group.ToMapping),
+				GetGroupCountInList(nodesIn2, Vfgr2, Group.ToMapping)))
 			{
 				return false;
 			}
 
-			if (!FnCmp(
-				GetGroupCountInList(nodesOut1, _vfgr1, Groups.ToMapping),
-				GetGroupCountInList(nodesOut2, _vfgr2, Groups.ToMapping)))
+			if (!FnCompareDegrees(
+				GetGroupCountInList(nodesOut1, Vfgr1, Group.ToMapping),
+				GetGroupCountInList(nodesOut2, Vfgr2, Group.ToMapping)))
 			{
 				return false;
 			}
 
-			if (!FnCmp(
-				GetGroupCountInList(nodesOut1, _vfgr1, Groups.Disconnected),
-				GetGroupCountInList(nodesOut2, _vfgr2, Groups.Disconnected)))
+			if (!FnCompareDegrees(
+				GetGroupCountInList(nodesOut1, Vfgr1, Group.Disconnected),
+				GetGroupCountInList(nodesOut2, Vfgr2, Group.Disconnected)))
 			{
 				return false;
 			}
 
-			if (!FnCmp(
-				GetGroupCountInList(nodesIn1, _vfgr1, Groups.Disconnected),
-				GetGroupCountInList(nodesIn2, _vfgr2, Groups.Disconnected)))
+			if (!FnCompareDegrees(
+				GetGroupCountInList(nodesIn1, Vfgr1, Group.Disconnected),
+				GetGroupCountInList(nodesIn2, Vfgr2, Group.Disconnected)))
 			{
 				return false;
 			}
@@ -620,8 +579,8 @@ namespace vflibcs
 
 			if (_fContextCheck)
 			{
-				var icc1 = _vfgr1.GetAttr(inod1) as IContextCheck;
-				var icc2 = _vfgr2.GetAttr(inod2) as IContextCheck;
+				var icc1 = Vfgr1.GetAttr(inod1) as IContextCheck;
+				var icc2 = Vfgr2.GetAttr(inod2) as IContextCheck;
 
 				if (icc1 != null && icc2 != null)
 				{
@@ -632,10 +591,10 @@ namespace vflibcs
 				}
 			}
 
-			var lstIn1 = _vfgr1.InNeighbors(inod1);
-			var lstIn2 = _vfgr2.InNeighbors(inod2);
-			var lstOut1 = _vfgr1.OutNeighbors(inod1);
-			var lstOut2 = _vfgr2.OutNeighbors(inod2);
+			var lstIn1 = Vfgr1.InNeighbors(inod1);
+			var lstIn2 = Vfgr2.InNeighbors(inod2);
+			var lstOut1 = Vfgr1.OutNeighbors(inod1);
+			var lstOut2 = Vfgr2.OutNeighbors(inod2);
 
 			// In Neighbors in mapping must map to In Neighbors...
 
@@ -664,7 +623,7 @@ namespace vflibcs
 
 		#region State Change/Restoral
 // ReSharper disable once UnusedMember.Local
-		private List<int> GetList(IEnumerable<int> lstOfNodes, VfGraph vfgr, Groups grp)
+		private List<int> GetList(IEnumerable<int> lstOfNodes, VfGraph vfgr, Group grp)
 		{
 			return lstOfNodes.Where(inod => ((int) vfgr.GetGroup(inod) & (int) grp) != 0).ToList();
 		}
@@ -676,136 +635,151 @@ namespace vflibcs
 
 			btr.SetMatch(mtc.Inod1, mtc.Inod2, this);
 
-			var lstIn1 = _vfgr1.InNeighbors(inod1);
-			var lstIn2 = _vfgr2.InNeighbors(inod2);
-			var lstOut1 = _vfgr1.OutNeighbors(inod1);
-			var lstOut2 = _vfgr2.OutNeighbors(inod2);
+			var lstIn1 = Vfgr1.InNeighbors(inod1);
+			var lstIn2 = Vfgr2.InNeighbors(inod2);
+			var lstOut1 = Vfgr1.OutNeighbors(inod1);
+			var lstOut2 = Vfgr2.OutNeighbors(inod2);
 
 			foreach (var inod in lstOut1)
 			{
-				if (((int) _vfgr1.GetGroup(inod) & (int) (Groups.Disconnected | Groups.ToMapping)) != 0)
+				if (((int) Vfgr1.GetGroup(inod) & (int) (Group.Disconnected | Group.ToMapping)) != 0)
 				{
-					btr.MoveToGroup(1, inod, Groups.FromMapping, this);
+					btr.MoveToGroup(1, inod, Group.FromMapping, this);
 				}
 			}
 			foreach (var inod in lstIn1)
 			{
-				if (((int) _vfgr1.GetGroup(inod) & (int) (Groups.Disconnected | Groups.FromMapping)) != 0)
+				if (((int) Vfgr1.GetGroup(inod) & (int) (Group.Disconnected | Group.FromMapping)) != 0)
 				{
-					btr.MoveToGroup(1, inod, Groups.ToMapping, this);
+					btr.MoveToGroup(1, inod, Group.ToMapping, this);
 				}
 			}
 			foreach (var inod in lstOut2)
 			{
-				if (((int) _vfgr2.GetGroup(inod) & (int) (Groups.Disconnected | Groups.ToMapping)) != 0)
+				if (((int) Vfgr2.GetGroup(inod) & (int) (Group.Disconnected | Group.ToMapping)) != 0)
 				{
-					btr.MoveToGroup(2, inod, Groups.FromMapping, this);
+					btr.MoveToGroup(2, inod, Group.FromMapping, this);
 				}
 			}
 			foreach (var inod in lstIn2)
 			{
-				if (((int) _vfgr2.GetGroup(inod) & (int) (Groups.Disconnected | Groups.FromMapping)) != 0)
+				if (((int) Vfgr2.GetGroup(inod) & (int) (Group.Disconnected | Group.FromMapping)) != 0)
 				{
-					btr.MoveToGroup(2, inod, Groups.ToMapping, this);
+					btr.MoveToGroup(2, inod, Group.ToMapping, this);
 				}
 			}
 
-			if (!FnCmp(_outDegreeTotal1, _outDegreeTotal2) ||
-			    !FnCmp(_inDegreeTotal1, _inDegreeTotal2))
+			if (!FnCompareDegrees(_outDegreeTotal1, _outDegreeTotal2) ||
+			    !FnCompareDegrees(_inDegreeTotal1, _inDegreeTotal2))
 			{
 				return false;
 			}
-			return FnCmp(lstOut1.Count, lstOut2.Count) && FnCmp(lstIn1.Count, lstIn2.Count);
+			return FnCompareDegrees(lstOut1.Count, lstOut2.Count) && FnCompareDegrees(lstIn1.Count, lstIn2.Count);
 		}
 
-		internal void MakeMove(int iGraph, int inod, Groups grpNew)
+		void AddToInDegree(int iGraph, int increment)
+		{
+			if (iGraph == 1)
+			{
+				_inDegreeTotal1 = _inDegreeTotal1 + increment;
+			}
+			else
+			{
+				_inDegreeTotal2 = _inDegreeTotal2 + increment;
+			}
+		}
+
+		void AddToOutDegree(int iGraph, int increment)
+		{
+			if (iGraph == 1)
+			{
+				_outDegreeTotal1 = _outDegreeTotal1 + increment;
+			}
+			else
+			{
+				_outDegreeTotal2 = _outDegreeTotal2 + increment;
+			}
+		}
+
+		/// <summary>
+		/// Reclassify a node into a new group
+		/// </summary>
+		/// <param name="iGraph">Graph the node is being reclassified in</param>
+		/// <param name="inod">Node to reclassify</param>
+		/// <param name="grpNew">New classification for the node</param>
+		internal void MakeMove(int iGraph, int inod, Group grpNew)
 		{
 			// Moves to the mapping are handled by the mapping arrays and aren't handled here.
 
 			VfGraph vfg;
-			SortedListNoKey<int> lstDisconnected;
+			SortedListNoValue<int> disconnectedList, outList, inList;
 
 			if (iGraph == 1)
 			{
 				vfg = Vfgr1;
-				lstDisconnected = LstDisconnected1;
+				disconnectedList = LstDisconnected1;
+				outList = LstOut1;
+				inList = LstIn1;
 			}
 			else
 			{
 				vfg = Vfgr2;
-				lstDisconnected = LstDisconnected2;
+				disconnectedList = LstDisconnected2;
+				outList = LstOut2;
+				inList = LstIn2;
 			}
 
+			// Old groups and new groups
 			var igrpCur = (int) vfg.GetGroup(inod);
 			var igrpNew = (int) grpNew;
 
+			// Groups to add to and remove from
 			var igrpRemove = igrpCur & ~igrpNew;
 			var igrpAdd = igrpNew & ~igrpCur;
 
 			if (igrpRemove != 0)
 			{
-				if ((igrpRemove & (int) Groups.Disconnected) != 0)
+				// Do we need to remove from the disconnect list?
+				if ((igrpRemove & (int) Group.Disconnected) != 0)
 				{
-					lstDisconnected.Delete(inod);
+					disconnectedList.Delete(inod);
 				}
-				if ((igrpRemove & (int) Groups.FromMapping) != 0)
+
+				// If we're no longer mapped from a node in the isomorphism
+				if ((igrpRemove & (int) Group.FromMapping) != 0)
 				{
-					if (iGraph == 1)
-					{
-						_lstOut1.Delete(inod);
-						_outDegreeTotal1--;
-					}
-					else
-					{
-						_lstOut2.Delete(inod);
-						_outDegreeTotal2--;
-					}
+					// Remove us from out list and decrement total out degree
+					outList.Delete(inod);
+					AddToOutDegree(iGraph, -1);
 				}
-				if ((igrpRemove & (int) Groups.ToMapping) != 0)
+				// If we're no longer mapped into a node in the isomorphism
+				if ((igrpRemove & (int)Group.ToMapping) != 0)
 				{
-					if (iGraph == 1)
-					{
-						_lstIn1.Delete(inod);
-						_inDegreeTotal1--;
-					}
-					else
-					{
-						_lstIn2.Delete(inod);
-						_inDegreeTotal2--;
-					}
+					// Remove us from in list and decrement total out degree
+					inList.Delete(inod);
+					AddToInDegree(iGraph, -1);
 				}
 			}
 			if (igrpAdd != 0)
 			{
-				if ((igrpAdd & (int) Groups.Disconnected) != 0)
+				// Add us to the disconnected group if necessary
+				if ((igrpAdd & (int) Group.Disconnected) != 0)
 				{
-					lstDisconnected.Add(inod);
+					disconnectedList.Add(inod);
 				}
-				if ((igrpAdd & (int) Groups.FromMapping) != 0)
+				// If we're newly mapped from a node in the isomorphism
+				if ((igrpAdd & (int)Group.FromMapping) != 0)
 				{
-					if (iGraph == 1)
-					{
-						_lstOut1.Add(inod);
-						_outDegreeTotal1++;
-					}
-					else
-					{
-						_lstOut2.Add(inod);
-						_outDegreeTotal2++;
-					}
+					// Add us to the out list and increment total out degree
+					outList.Add(inod);
+					AddToOutDegree(iGraph, 1);
 				}
-				if ((igrpAdd & (int) Groups.ToMapping) != 0)
+				// If we're newly mapped into a node in the isomorphism
+				if ((igrpAdd & (int) Group.ToMapping) != 0)
 				{
-					if (iGraph == 1)
-					{
-						_lstIn1.Add(inod);
-						_inDegreeTotal1++;
-					}
-					else
-					{
-						_lstIn2.Add(inod);
-						_inDegreeTotal2++;
-					}
+					// Add us to the in list and increment total in degree
+					inList.Add(inod);
+					AddToInDegree(iGraph, 1);
 				}
 			}
 			vfg.SetGroup(inod, grpNew);
@@ -919,19 +893,19 @@ namespace vflibcs
 			public void TestMakeMove()
 			{
 				var vfs = VfsTest();
-				vfs.MakeMove(1, 0, Groups.FromMapping);
-				Assert.AreEqual(1, vfs._lstOut1.Count);
-				Assert.AreEqual(5, vfs._lstDisconnected1.Count);
-				Assert.AreEqual(Groups.FromMapping, vfs.Vfgr1.GetGroup(0));
+				vfs.MakeMove(1, 0, Group.FromMapping);
+				Assert.AreEqual(1, vfs.LstOut1.Count);
+				Assert.AreEqual(5, vfs.LstDisconnected1.Count);
+				Assert.AreEqual(Group.FromMapping, vfs.Vfgr1.GetGroup(0));
 			}
 
 			[Test]
 			public void TestSetMapping()
 			{
 				var vfs = VfsTest();
-				vfs.SetMapping(0, 1);
-				Assert.AreEqual(1, vfs._arinodMap1To2[0]);
-				Assert.AreEqual(0, vfs._arinodMap2To1[1]);
+				vfs.SetIsomorphic(0, 1);
+				Assert.AreEqual(1, vfs._isomorphism1To2[0]);
+				Assert.AreEqual(0, vfs._isomorphism2To1[1]);
 			}
 
 			[Test]

@@ -4,8 +4,12 @@ using System.Linq;
 
 namespace vflibcs
 {
+	// At any point in time in the algorithm nodes are classified into one of four
+	// groups.  Either they are part of the currently proposed isomorphism or they
+	// are pointed to by some node in the isomorphism or they point to some node in
+	// the isomorphism or they are completely disconnected from the isomorphism.
 	[Flags]
-	enum Groups
+	enum Group
 	{
 		ContainedInMapping = 1,		// Contained in the mapping
 		FromMapping = 2,			// Outside the mapping but pointed to from the mapping
@@ -19,13 +23,13 @@ namespace vflibcs
 		readonly VfeNode[] _arvfeEdgeOut;
 		readonly VfeNode[] _arvfeEdgeIn;
 		readonly object _objAttr;
-		Groups _grps = Groups.Disconnected;
+		Group _grps = Group.Disconnected;
 		#endregion
 
 		#region Constructor
 		internal VfnNode(IGraphLoader loader, int inodGraph, Dictionary<VfeNode, VfeNode> dctEdge, int[] mpInodGraphInodVf)
 		{
-			int nid = loader.IdFromPos(inodGraph);
+			var nid = loader.IdFromPos(inodGraph);
 			_objAttr = loader.GetNodeAttr(nid);
 			_arvfeEdgeOut = new VfeNode[loader.OutEdgeCount(nid)];
 			_arvfeEdgeIn = new VfeNode[loader.InEdgeCount(nid)];
@@ -35,7 +39,7 @@ namespace vflibcs
 
 		#region Properties
 
-		internal Groups Grps
+		internal Group Grps
 		{
 			get { return _grps; }
 			set { _grps = value; }
@@ -87,15 +91,15 @@ namespace vflibcs
 
 		internal bool FInMapping
 		{
-			get { return _grps == Groups.ContainedInMapping; }
+			get { return _grps == Group.ContainedInMapping; }
 		}
 		#endregion
 
 		#region Edge Makers
 		private void MakeEdges(IGraphLoader loader, int nid, Dictionary<VfeNode, VfeNode> dctEdge, int[] mpInodGraphInodVf)
 		{
-			int inodGraph = loader.PosFromId(nid);
-			int inodVf = mpInodGraphInodVf[inodGraph];
+			var inodGraph = loader.PosFromId(nid);
+			var inodVf = mpInodGraphInodVf[inodGraph];
 			var vfeKey = new VfeNode(0, 0, null) {InodFrom = inodVf};
 
 			MakeOutEdges(loader, nid, dctEdge, mpInodGraphInodVf, ref vfeKey);

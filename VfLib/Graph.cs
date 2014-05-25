@@ -177,7 +177,7 @@ namespace vflibcs
 			return nod.ID;
 		}
 
-		public int InsertNodes(int cnod, object attr)
+		public int InsertNodes(int cnod, object attr = null)
 		{
 			var nid = InsertNode(attr);
 
@@ -186,18 +186,6 @@ namespace vflibcs
 				InsertNode(attr);
 			}
 
-			return nid;
-		}
-
-		// ReSharper disable once UnusedMethodReturnValue.Global
-		public int InsertNodes(int cnod)
-		{
-			var nid = InsertNode();
-
-			for (var i = 0; i < cnod - 1; i++)
-			{
-				InsertNode();
-			}
 			return nid;
 		}
 
