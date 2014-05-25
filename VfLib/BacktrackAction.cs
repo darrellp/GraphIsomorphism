@@ -10,14 +10,16 @@ namespace vflibcs
 		GroupMove
 	}
 
-
+	/// <summary>
+	/// Backtrack action taken on a state
+	/// </summary>
 	class BacktrackAction
 	{
 		#region Private Variables
-		readonly Action _act;
-		readonly int _iGraph;
-		readonly int _inod;
-		readonly Group _grpRestore;
+		readonly Action _act;			// Type of action
+		readonly int _iGraph;			// Which graph was affected
+		readonly int _inod;				// Node affected
+		readonly Group _grpRestore;		// Group to move back to if GroupMove action
 		#endregion
 
 		#region Constructor
@@ -36,10 +38,12 @@ namespace vflibcs
 			switch (_act)
 			{
 				case Action.DeleteMatch:
+					// Undo a matching
 					vfs.RemoveFromMappingList(_iGraph, _inod);
 					break;
 
 				case Action.GroupMove:
+					// Move back to previous group
 					vfs.MakeMove(_iGraph, _inod, _grpRestore);
 					break;
 			}

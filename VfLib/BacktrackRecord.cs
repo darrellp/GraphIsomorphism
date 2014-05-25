@@ -6,11 +6,14 @@ using NUnit.Framework;
 namespace vflibcs
 {
 	/// <summary>
+	/// Record to allow undos in backtracking.
+	/// </summary>
+	/// <remarks>
 	/// As we mess with the state we need to keep track of what we do so when
 	/// we backtrack we can undo.  This is the purpose of the BacktrackRecord.
 	/// There are only two actions taken in the course of a backtrack record -
 	/// matching nodes and reclassifying nodes into different groups.
-	/// </summary>
+	/// </remarks>
 	class BacktrackRecord
 	{
 		#region Private Variables
