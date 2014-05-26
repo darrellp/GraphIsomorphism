@@ -82,6 +82,7 @@
     <Compile Include="VfState.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Public Interface.cd" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

@@ -1,0 +1,120 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="vflibcs.Graph" BaseTypeListCollapsed="true">
+    <Position X="2.25" Y="0.5" Width="1.5" />
+    <Members>
+      <Method Name="FindNode" Hidden="true" />
+      <Method Name="IsomorphicShuffling" Hidden="true" />
+      <Field Name="NidIllegal" Hidden="true" />
+      <Field Name="Nodes" Hidden="true" />
+    </Members>
+    <NestedTypes>
+      <Class Name="vflibcs.Graph.ENode" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Graph.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Class Name="vflibcs.Graph.NNode" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Graph.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Class Name="vflibcs.Graph.GraphTester" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Graph.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAgAAAAABAAIQAAECAAQAAEBAAEAIgAYBABAAAAEAQ=</HashCode>
+      <FileName>Graph.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="vflibcs.VfState">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <Members>
+      <Field Name="_degreeSortedToOriginal1" Hidden="true" />
+      <Field Name="_degreeSortedToOriginal2" Hidden="true" />
+      <Field Name="_fContextCheck" Hidden="true" />
+      <Field Name="_fFindAll" Hidden="true" />
+      <Field Name="_fMatched" Hidden="true" />
+      <Field Name="_fSuccessfulMatch" Hidden="true" />
+      <Field Name="_inDegreeTotal1" Hidden="true" />
+      <Field Name="_inDegreeTotal2" Hidden="true" />
+      <Field Name="_isomorphism1To2" Hidden="true" />
+      <Field Name="_isomorphism2To1" Hidden="true" />
+      <Field Name="_isomorphismNid1ToNid2" Hidden="true" />
+      <Field Name="_isomorphismNid2ToNid1" Hidden="true" />
+      <Field Name="_ldr1" Hidden="true" />
+      <Field Name="_ldr2" Hidden="true" />
+      <Field Name="_lstfm" Hidden="true" />
+      <Field Name="_lstMappings" Hidden="true" />
+      <Field Name="_outDegreeTotal1" Hidden="true" />
+      <Field Name="_outDegreeTotal2" Hidden="true" />
+      <Method Name="AddToInDegree" Hidden="true" />
+      <Method Name="AddToOutDegree" Hidden="true" />
+      <Method Name="CmpIsomorphism" Hidden="true" />
+      <Method Name="CmpSubgraphIsomorphism" Hidden="true" />
+      <Method Name="FAddMatchToSolution" Hidden="true" />
+      <Method Name="FCompatibleDegrees" Hidden="true" />
+      <Method Name="FCompleteMatch" Hidden="true" />
+      <Method Name="FFeasible" Hidden="true" />
+      <Method Name="FInOutNew" Hidden="true" />
+      <Method Name="FLocallyIsomorphic" Hidden="true" />
+      <Property Name="FMassagedPermutation" Hidden="true" />
+      <Property Name="FMassagedPermutationList" Hidden="true" />
+      <Field Name="FnCompareDegrees" Hidden="true" />
+      <Method Name="GetGroupCountInList" Hidden="true" />
+      <Property Name="LstDisconnected1" Hidden="true" />
+      <Property Name="LstDisconnected2" Hidden="true" />
+      <Property Name="LstIn1" Hidden="true" />
+      <Property Name="LstIn2" Hidden="true" />
+      <Property Name="LstOut1" Hidden="true" />
+      <Property Name="LstOut2" Hidden="true" />
+      <Method Name="MakeMove" Hidden="true" />
+      <Field Name="MapIllegal" Hidden="true" />
+      <Method Name="MassagePermutation" Hidden="true" />
+      <Method Name="MassagePermutationList" Hidden="true" />
+      <Method Name="MassagePermutations" Hidden="true" />
+      <Method Name="RecordCurrentMatch" Hidden="true" />
+      <Method Name="RemoveFromMappingList" Hidden="true" />
+      <Method Name="SetIsomorphic" Hidden="true" />
+      <Property Name="Vfgr1" Hidden="true" />
+      <Property Name="Vfgr2" Hidden="true" />
+    </Members>
+    <NestedTypes>
+      <Class Name="vflibcs.VfState.VfGraphTester" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VfState.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>YkgHODAGYQiAEAAAYABAACU2QAhAggAASGEIAACRBBA=</HashCode>
+      <FileName>VfState.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="vflibcs.FullMapping">
+    <Position X="7.5" Y="0.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>FullMapping.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Interface Name="vflibcs.IContextCheck">
+    <Position X="5.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>IContextCheck.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="vflibcs.IGraphLoader">
+    <Position X="4" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAAAQAAECAAQAAAAAAEAIgAAAAAAAAAAAA=</HashCode>
+      <FileName>IGraphLoader.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
