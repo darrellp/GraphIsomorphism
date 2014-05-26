@@ -15,22 +15,19 @@ namespace vflibcs
 	// Struct representing a full isomorphism mapping
 	public struct FullMapping
 	{
-		public int[] ArinodMap1To2;
-		public int[] ArinodMap2To1;
+		public Dictionary<int, int> IsomorphismNid1ToNid2;
+		public Dictionary<int, int> IsomorphismNid2ToNid1;
 
 		public FullMapping(int count1, int count2)
 		{
-			ArinodMap1To2 = new int[count1];
-			ArinodMap2To1 = new int[count2];
+			IsomorphismNid1ToNid2 = new Dictionary<int, int>(count1);
+			IsomorphismNid2ToNid1 = new Dictionary<int, int>(count2);
 		}
 
-		public FullMapping(int[] arinodMap1To2Prm, int[] arinodMap2To1Prm)
+		public FullMapping(Dictionary<int, int> dict1, Dictionary<int, int> dict2)
 		{
-			var cElements = arinodMap1To2Prm.Length;
-			ArinodMap1To2 = new int[cElements];
-			ArinodMap2To1 = new int[cElements];
-			Array.Copy(arinodMap1To2Prm, ArinodMap1To2, cElements);
-			Array.Copy(arinodMap2To1Prm, ArinodMap2To1, cElements);
+			IsomorphismNid1ToNid2 = new Dictionary<int, int>(dict1);
+			IsomorphismNid2ToNid1 = new Dictionary<int, int>(dict2);
 		}
 	}
 
@@ -41,12 +38,12 @@ namespace vflibcs
 
 		// Mapping between node positions in VfGraph and the original Graph.
 		// This is just the permutation to sort the original graph nodes by degrees.
-		private readonly int[] _degreeSortedToOriginal1;
-		private readonly int[] _degreeSortedToOriginal2;
+		private readonly Dictionary<int, int> _degreeSortedToOriginal1;
+		private readonly Dictionary<int, int> _degreeSortedToOriginal2;
 
 		// Above mappings but indexed from/to node id's from the original maps.
-		private int[] _isomorphismNid1ToNid2;
-		private int[] _isomorphismNid2ToNid1;
+		private Dictionary<int, int> _isomorphismNid1ToNid2;
+		private Dictionary<int, int> _isomorphismNid2ToNid1;
 
 		// List of Isomorphic mappings in original maps
 		private List<FullMapping> _lstfm;
@@ -57,8 +54,8 @@ namespace vflibcs
 		private readonly IGraphLoader _ldr2;
 
 		// The actual mappings we're building up
-		private readonly int[] _isomorphism1To2;
-		private readonly int[] _isomorphism2To1;
+		private readonly Dictionary<int, int> _isomorphism1To2;
+		private readonly Dictionary<int, int> _isomorphism2To1;
 
 		// All the mappings we've located thus far...
 		private readonly List<FullMapping> _lstMappings = new List<FullMapping>();
@@ -82,7 +79,7 @@ namespace vflibcs
 			get { return _lstfm != null; }
 		}
 
-		public int[] Mapping1To2
+		public Dictionary<int, int> Mapping1To2
 		{
 			get
 			{
@@ -98,7 +95,7 @@ namespace vflibcs
 			}
 		}
 
-		public int[] Mapping2To1
+		public Dictionary<int, int> Mapping2To1
 		{
 			get
 			{
@@ -135,7 +132,6 @@ namespace vflibcs
 		{
 			MassagePermutations(
 				_isomorphism1To2,
-				_isomorphism2To1,
 				_degreeSortedToOriginal1,
 				_degreeSortedToOriginal2,
 				out _isomorphismNid1ToNid2,
@@ -143,45 +139,51 @@ namespace vflibcs
 		}
 
 		private void MassagePermutations(
-			int[] isomorphism1To2,
-			int[] isomorphism2To1,
-			int[] degreeSortedToOriginal1,
-			int[] degreeSortedToOriginal2,
-			out int[] isomorphismNid1ToNid2,
-			out int[] isomorphismNid2ToNid1)
+			Dictionary<int, int> isomorphism1To2,
+			Dictionary<int, int> degreeSortedToOriginal1,
+			Dictionary<int, int> degreeSortedToOriginal2,
+			out Dictionary<int, int> isomorphismNid1ToNid2,
+			out Dictionary<int, int> isomorphismNid2ToNid1)
 		{
 			// Holding areas for new permutations
-			isomorphismNid1ToNid2 = new int[isomorphism1To2.Length];
-			isomorphismNid2ToNid1 = new int[isomorphism2To1.Length];
-
-			for (var i = 0; i < isomorphism1To2.Length; i++)
+			isomorphismNid1ToNid2 = new Dictionary<int, int>();
+			isomorphismNid2ToNid1 = new Dictionary<int, int>();
+			foreach (var pair in isomorphism1To2)
 			{
-				var inodMap = isomorphism1To2[degreeSortedToOriginal1[i]];
-				isomorphismNid1ToNid2[i] = (inodMap == MapIllegal ? MapIllegal : _ldr2.IdFromPos(_degreeSortedToOriginal2[inodMap]));
-			}
-
-			for (var i = 0; i < isomorphism2To1.Length; i++)
-			{
-				// Shouldn't be any map_illegal values in the second graph's array
-				isomorphismNid2ToNid1[i] = _ldr1.IdFromPos(_degreeSortedToOriginal1[isomorphism2To1[degreeSortedToOriginal2[i]]]);
+				var vfInod2 = pair.Value;
+				var inode1 = degreeSortedToOriginal1[pair.Key];
+				var nid1 = _ldr1.IdFromPos(inode1);
+				if (vfInod2 == MapIllegal)
+				{
+					isomorphismNid1ToNid2[nid1] = MapIllegal;
+					break;
+				}
+				var inode2 = degreeSortedToOriginal2[vfInod2];
+				var nid2 = _ldr2.IdFromPos(inode2);
+				isomorphismNid1ToNid2[nid1] = nid2;
+				isomorphismNid2ToNid1[nid2] = nid1;
 			}
 		}
 
 		private void MassagePermutationList()
 		{
-			var count1 = _isomorphism1To2.Length;
-			var count2 = _isomorphism2To1.Length;
-
 			// Permutations to move from VfGraph inods to Graph inods
 			var armpInodGraphInodVf1 = VfGraph.ReversePermutation(_degreeSortedToOriginal1);
 			var armpInodGraphInodVf2 = VfGraph.ReversePermutation(_degreeSortedToOriginal2);
 			_lstfm = new List<FullMapping>(_lstMappings.Count);
 
+			var count1 = _isomorphism1To2.Count;
+			var count2 = _isomorphism2To1.Count;
+
 			foreach (var fm in _lstMappings)
 			{
 				var fmTmp = new FullMapping(count1, count2);
-				MassagePermutations(fm.ArinodMap1To2, fm.ArinodMap2To1, armpInodGraphInodVf1, armpInodGraphInodVf2,
-					out fmTmp.ArinodMap1To2, out fmTmp.ArinodMap2To1);
+				MassagePermutations(
+					fm.IsomorphismNid1ToNid2,
+					armpInodGraphInodVf1,
+					armpInodGraphInodVf2,
+					out fmTmp.IsomorphismNid1ToNid2,
+					out fmTmp.IsomorphismNid2ToNid1);
 				_lstfm.Add(fmTmp);
 			}
 		}
@@ -264,8 +266,8 @@ namespace vflibcs
 			Vfgr2 = new VfGraph(loader2, _degreeSortedToOriginal2);
 
 			// Set up space for isomorphism mappings
-			_isomorphism1To2 = new int[loader1.NodeCount];
-			_isomorphism2To1 = new int[loader2.NodeCount];
+			_isomorphism1To2 = new Dictionary<int, int>(loader1.NodeCount);
+			_isomorphism2To1 = new Dictionary<int, int>(loader2.NodeCount);
 
 			// When we start no isomorphic mappings and all nodes are disconnected
 			// from the isomorphism.
@@ -1175,7 +1177,6 @@ namespace vflibcs
 				var arprm2To1 = vfs.Mapping2To1;
 				Assert.AreEqual(1, arprm1To2[2]);
 				Assert.AreEqual(0, arprm1To2[3]);
-				Assert.AreEqual(MapIllegal, arprm1To2[0]);
 				Assert.AreEqual(MapIllegal, arprm1To2[1]);
 				Assert.AreEqual(3, arprm2To1[0]);
 				Assert.AreEqual(2, arprm2To1[1]);

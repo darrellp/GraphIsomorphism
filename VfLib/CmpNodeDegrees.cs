@@ -20,13 +20,18 @@ namespace vflibcs
 		#region Permutation
 		// Return a permutation of node positions so that the corresponding nodes are ordered
 		// from highest total degree to lowest
-		internal int[] Permutation
+		internal Dictionary<int, int> Permutation
 		{
 			get
 			{
+				var ret = new Dictionary<int, int>();
 				var mpInodInodPermuted = Enumerable.Range(0, _loader.NodeCount).ToArray();
 				Array.Sort(mpInodInodPermuted, this);
-				return mpInodInodPermuted;
+				for (int i = 0; i < mpInodInodPermuted.Length; i++)
+				{
+					ret[i] = mpInodInodPermuted[i];
+				}
+				return ret;
 			}
 		}
 		#endregion

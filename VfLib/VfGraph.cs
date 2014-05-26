@@ -66,12 +66,17 @@ namespace vflibcs
 		#endregion
 
 		#region Constructor
-		internal static int[] ReversePermutation(int[] perm)
+		internal static Dictionary<int, int> ReversePermutation(Dictionary<int, int> perm)
 		{
-			return Enumerable.Range(0, perm.Length).Select(i => Array.IndexOf(perm, i)).ToArray();
+			var ret = new Dictionary<int, int>();
+			foreach ( var i in perm)
+			{
+				ret[i.Value] = i.Key;
+			}
+			return ret;
 		}
 
-		internal VfGraph(IGraphLoader loader, int[] mpInodVfInodGraph = null)
+		internal VfGraph(IGraphLoader loader, Dictionary<int, int> mpInodVfInodGraph = null)
 		{
 			if (mpInodVfInodGraph == null)
 			{
