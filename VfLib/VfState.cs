@@ -128,6 +128,9 @@ namespace vflibcs
 			}
 		}
 
+		/// <summary>
+		/// Turn current VfGraph to VfGraph Inode mapping into Graph to Graph nid mapping
+		/// </summary>
 		private void MassagePermutation()
 		{
 			MassagePermutations(
@@ -138,6 +141,14 @@ namespace vflibcs
 				out _isomorphismNid2ToNid1);
 		}
 
+		/// <summary>
+		/// Turn VfGraph to VfGraph Inode mapping into Graph to Graph nid mapping
+		/// </summary>
+		/// <param name="isomorphism1To2">The VfGraph to VfGraph mapping</param>
+		/// <param name="degreeSortedToOriginal1">VfGraph1 Inode to Graph1 Inode mapping</param>
+		/// <param name="degreeSortedToOriginal2">VfGraph2 Inode to Graph2 Inode mapping</param>
+		/// <param name="isomorphismNid1ToNid2">Returned Graph1 nid to Graph2 nid mapping</param>
+		/// <param name="isomorphismNid2ToNid1">Returned Graph2 nid to Graph1 nid mapping</param>
 		private void MassagePermutations(
 			Dictionary<int, int> isomorphism1To2,
 			Dictionary<int, int> degreeSortedToOriginal1,
@@ -165,6 +176,9 @@ namespace vflibcs
 			}
 		}
 
+		/// <summary>
+		/// Produce all the full mappings found
+		/// </summary>
 		private void MassagePermutationList()
 		{
 			// Permutations to move from VfGraph inods to Graph inods
