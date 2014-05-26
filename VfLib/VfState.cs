@@ -118,6 +118,7 @@ namespace vflibcs
 		{
 			get
 			{
+				// If never found a match return null
 				if (!_fSuccessfulMatch)
 				{
 					return null;
@@ -132,40 +133,18 @@ namespace vflibcs
 
 		private void MassagePermutation()
 		{
-			// Permutations to move from VfGraph inods to Graph inods
-			var armpInodGraphInodVf1 = VfGraph.ReversePermutation(_degreeSortedToOriginal1);
-			var armpInodGraphInodVf2 = VfGraph.ReversePermutation(_degreeSortedToOriginal2);
-
-			// Holding areas for new permutations
-			_armpNid1Nid2 = new int[_isomorphism1To2.Length];
-			_armpNid2Nid1 = new int[_isomorphism2To1.Length];
-
-			for (var i = 0; i < _isomorphism1To2.Length; i++)
-			{
-				var inodMap = _isomorphism1To2[armpInodGraphInodVf1[i]];
-				_armpNid1Nid2[i] = (inodMap == MapIllegal ? MapIllegal : _ldr2.IdFromPos(_degreeSortedToOriginal2[inodMap]));
-			}
-
-			for (var i = 0; i < _isomorphism2To1.Length; i++)
-			{
-				// Shouldn't be any map_illegal values in the second graph's array
-				_armpNid2Nid1[i] = _ldr1.IdFromPos(_degreeSortedToOriginal1[_isomorphism2To1[armpInodGraphInodVf2[i]]]);
-			}
+			MassagePermutations(_isomorphism1To2, _isomorphism2To1, _degreeSortedToOriginal1, _degreeSortedToOriginal2,
+				out _armpNid1Nid2, out _armpNid2Nid1);
 		}
 
 		private void MassagePermutations(
-			int[] arinodMap1To2, int[] arinodMap2To1,
-			int[] armpInodGraphInodVf1, int[] armpInodGraphInodVf2,
-			ref int[] armpNid1Nid2, ref int[] armpNid2Nid1)
+			int[] arinodMap1To2,
+			int[] arinodMap2To1,
+			int[] armpInodGraphInodVf1,
+			int[] armpInodGraphInodVf2,
+			out int[] armpNid1Nid2,
+			out int[] armpNid2Nid1)
 		{
-			if (armpNid2Nid1 == null)
-			{
-				throw new ArgumentNullException("armpNid2Nid1");
-			}
-			if (armpNid1Nid2 == null)
-			{
-				throw new ArgumentNullException("armpNid1Nid2");
-			}
 			// Holding areas for new permutations
 			armpNid1Nid2 = new int[arinodMap1To2.Length];
 			armpNid2Nid1 = new int[arinodMap2To1.Length];
@@ -197,7 +176,7 @@ namespace vflibcs
 			{
 				var fmTmp = new FullMapping(count1, count2);
 				MassagePermutations(fm.ArinodMap1To2, fm.ArinodMap2To1, armpInodGraphInodVf1, armpInodGraphInodVf2,
-					ref fmTmp.ArinodMap1To2, ref fmTmp.ArinodMap2To1);
+					out fmTmp.ArinodMap1To2, out fmTmp.ArinodMap2To1);
 				_lstfm.Add(fmTmp);
 			}
 		}

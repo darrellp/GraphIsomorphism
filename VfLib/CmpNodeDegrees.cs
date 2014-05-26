@@ -44,7 +44,7 @@ namespace vflibcs
 			var nidY = _loader.IdFromPos(y);
 			var xDegree = _loader.InEdgeCount(nidX) + _loader.OutEdgeCount(nidX);
 			var yDegree = _loader.InEdgeCount(nidY) + _loader.OutEdgeCount(nidY);
-			return yDegree.CompareTo(xDegree); //xDegree < yDegree ? 1 : -1);
+			return yDegree.CompareTo(xDegree);
 		}
 		#endregion
 	}
