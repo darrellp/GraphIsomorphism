@@ -1,6 +1,8 @@
+using System;
+
 namespace vflibcs
 {
-	public interface IGraphLoader
+	public interface IGraphLoader<T>
 	{
 		// When nodes/edges are inserted, they are given ID's that they keep through their life.
 		// They are entered in a list and the indices in the list may not correspond to the
@@ -13,11 +15,13 @@ namespace vflibcs
 		// and PosFromId.  The edges are always identified by inod's.
 		int NodeCount { get; }
 		int IdFromPos(int inod);
-		object GetNodeAttr(int nid);
+		T GetNodeAttr(int nid);
 		int OutEdgeCount(int nid);
-		int GetOutEdge(int nid, int inodEdge, out object attr);
+		int GetOutEdge(int nid, int inodEdge, out T attr);
 		int InEdgeCount(int cEdge);
-		int GetInEdge(int nid, int inodEdge, out object attr);
+		int GetInEdge(int nid, int inodEdge, out T attr);
 		int PosFromId(int nid);
 	}
+
+	public interface IGraphLoader : IGraphLoader<Object> {}
 }

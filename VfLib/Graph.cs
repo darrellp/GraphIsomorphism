@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace vflibcs
 {
-	public class Graph : IGraphLoader
+	public class Graph<TAttr> : IGraphLoader<TAttr> where TAttr : class
 	{
 		#region Private variables
 		internal readonly SortedList<int, NNode> Nodes = new SortedList<int, NNode>(); // Sorted by node id's
@@ -17,14 +17,14 @@ namespace vflibcs
 		#region Private structs
 		internal class ENode
 		{
-			public object Attr;
+			public TAttr Attr;
 			public int IDFrom = NidIllegal;
 			public int IDTo = NidIllegal;
 		}
 
 		internal class NNode
 		{
-			public object Attr;
+			public TAttr Attr;
 			public readonly SortedList<int, ENode> EdgesFrom = new SortedList<int, ENode>(); // Key is named id of "to" node
 			public readonly List<ENode> EdgesTo = new List<ENode>();
 			public int ID = NidIllegal;
@@ -119,7 +119,7 @@ namespace vflibcs
 			return Nodes.IndexOfKey(nid);
 		}
 
-		public object GetNodeAttr(int id)
+		public TAttr GetNodeAttr(int id)
 		{
 			return FindNode(id).Attr;
 		}
@@ -134,7 +134,7 @@ namespace vflibcs
 			return FindNode(id).EdgesFrom.Count;
 		}
 
-		public int GetInEdge(int idTo, int pos, out object attr)
+		public int GetInEdge(int idTo, int pos, out TAttr attr)
 		{
 			ENode end = null;
 			try
@@ -151,7 +151,7 @@ namespace vflibcs
 			return end.IDFrom;
 		}
 
-		public int GetOutEdge(int idFrom, int pos, out object attr)
+		public int GetOutEdge(int idFrom, int pos, out TAttr attr)
 		{
 			ENode end = null;
 			try
@@ -170,14 +170,14 @@ namespace vflibcs
 		#endregion
 
 		#region Insertion/Deletion
-		public int InsertNode(object attr = null)
+		public int InsertNode(TAttr attr = null)
 		{
 			var nod = new NNode {ID = Nodes.Count, Attr = attr};
 			Nodes.Add(nod.ID, nod);
 			return nod.ID;
 		}
 
-		public int InsertNodes(int cnod, object attr = null)
+		public int InsertNodes(int cnod, TAttr attr = null)
 		{
 			var nid = InsertNode(attr);
 
@@ -189,7 +189,7 @@ namespace vflibcs
 			return nid;
 		}
 
-		public void InsertEdge(int nidFrom, int nidTo, object attr = null)
+		public void InsertEdge(int nidFrom, int nidTo, TAttr attr = null)
 		{
 			var end = new ENode();
 			var nodFrom = FindNode(nidFrom);
@@ -233,125 +233,123 @@ namespace vflibcs
 			nodTo.EdgesTo.Remove(end);
 		}
 		#endregion
+	}
 
-		#region NUNIT Testing
-#if NUNIT
-		[TestFixture]
-		public class GraphTester
+	public class Graph : Graph<Object> { }
+
+	[TestFixture]
+	public class GraphTester
+	{
+		[Test]
+		public void TestConstructor()
 		{
-			[Test]
-			public void TestConstructor()
-			{
-				var gr = new Graph();
-				Assert.IsNotNull(gr);
-			}
-
-			[ExpectedException(typeof (VfException))]
-			[Test]
-			public void TestDeleteEdge()
-			{
-				var gr = new Graph();
-				Assert.AreEqual(0, gr.InsertNode());
-				Assert.AreEqual(1, gr.InsertNode());
-				Assert.AreEqual(2, gr.InsertNode());
-				gr.InsertEdge(0, 1);
-				gr.InsertEdge(1, 2);
-				gr.InsertEdge(2, 0);
-				gr.DeleteEdge(1, 2);
-				Assert.AreEqual(1, gr.OutEdgeCount(0));
-				Assert.AreEqual(0, gr.OutEdgeCount(1));
-				Assert.AreEqual(1, gr.OutEdgeCount(2));
-
-				// Trigger the exception - no edge from 1 to 0...
-				gr.DeleteEdge(1, 0);
-			}
-
-			[ExpectedException(typeof (VfException))]
-			[Test]
-			public void TestDeleteNode()
-			{
-				var gr = new Graph();
-				Assert.AreEqual(0, gr.InsertNode());
-				Assert.AreEqual(1, gr.InsertNode());
-				Assert.AreEqual(2, gr.InsertNode());
-				gr.InsertEdge(0, 1);
-				gr.InsertEdge(1, 2);
-				gr.InsertEdge(2, 0);
-				gr.DeleteNode(0);
-
-				Assert.AreEqual(1, gr.OutEdgeCount(1));
-				Assert.AreEqual(0, gr.OutEdgeCount(2));
-
-				// Trigger the exception - shouldn't be a zero node any more...
-				gr.FindNode(0);
-			}
-
-			[ExpectedException(typeof (VfException))]
-			[Test]
-			public void TestFindNodeNotFound()
-			{
-				var gr = new Graph();
-				var nod = gr.FindNode(0);
-				Assert.IsNotNull(nod);
-			}
-
-			[ExpectedException(typeof (VfException))]
-			[Test]
-			public void TestInsertEdge()
-			{
-				object attr;
-				var gr = new Graph();
-				var idFrom = gr.InsertNode(0);
-				var idTo = gr.InsertNode(1);
-				gr.InsertEdge(idFrom, idTo, 100);
-				Assert.AreEqual(gr.OutEdgeCount(idFrom), 1);
-				Assert.AreEqual(gr.OutEdgeCount(idTo), 0);
-				var idEdge = gr.GetOutEdge(idFrom, 0, out attr);
-				Assert.AreEqual(100, (int) attr);
-				Assert.AreEqual(idTo, idEdge);
-
-				// Try inserting the same edge twice to trigger exception...
-				gr.InsertEdge(0, 1, 200);
-			}
-
-			[ExpectedException(typeof (VfException))]
-			[Test]
-			public void TestInsertNode()
-			{
-				var gr = new Graph();
-				gr.InsertNode(1);
-				var nod = gr.FindNode(0);
-				Assert.IsNotNull(nod);
-				nod = gr.FindNode(1);
-				Assert.IsNotNull(nod);
-			}
-
-			[Test]
-			public void TestShuffle()
-			{
-				var rnd = new Random(10);
-				const int count = 100;
-				var ariShuffle = new int[count];
-
-				for (var i = 0; i < count; i++)
-				{
-					ariShuffle[i] = i;
-				}
-				Assert.AreEqual(0, ariShuffle[0]);
-				Assert.AreEqual(99, ariShuffle[99]);
-				Shuffle(ariShuffle, rnd);
-				Assert.AreNotEqual(0, ariShuffle[0]);
-				Assert.AreNotEqual(99, ariShuffle[99]);
-
-				var iTotal = 0;
-				for (var i = 0; i < count; i++)
-				{
-					iTotal += ariShuffle[i];
-				}
-				Assert.AreEqual(count * (count - 1) / 2, iTotal);
-			}
+			var gr = new Graph();
+			Assert.IsNotNull(gr);
 		}
-#endif
-		#endregion
+
+		[ExpectedException(typeof (VfException))]
+		[Test]
+		public void TestDeleteEdge()
+		{
+			var gr = new Graph();
+			Assert.AreEqual(0, gr.InsertNode());
+			Assert.AreEqual(1, gr.InsertNode());
+			Assert.AreEqual(2, gr.InsertNode());
+			gr.InsertEdge(0, 1);
+			gr.InsertEdge(1, 2);
+			gr.InsertEdge(2, 0);
+			gr.DeleteEdge(1, 2);
+			Assert.AreEqual(1, gr.OutEdgeCount(0));
+			Assert.AreEqual(0, gr.OutEdgeCount(1));
+			Assert.AreEqual(1, gr.OutEdgeCount(2));
+
+			// Trigger the exception - no edge from 1 to 0...
+			gr.DeleteEdge(1, 0);
+		}
+
+		[ExpectedException(typeof (VfException))]
+		[Test]
+		public void TestDeleteNode()
+		{
+			var gr = new Graph();
+			Assert.AreEqual(0, gr.InsertNode());
+			Assert.AreEqual(1, gr.InsertNode());
+			Assert.AreEqual(2, gr.InsertNode());
+			gr.InsertEdge(0, 1);
+			gr.InsertEdge(1, 2);
+			gr.InsertEdge(2, 0);
+			gr.DeleteNode(0);
+
+			Assert.AreEqual(1, gr.OutEdgeCount(1));
+			Assert.AreEqual(0, gr.OutEdgeCount(2));
+
+			// Trigger the exception - shouldn't be a zero node any more...
+			gr.FindNode(0);
+		}
+
+		[ExpectedException(typeof (VfException))]
+		[Test]
+		public void TestFindNodeNotFound()
+		{
+			var gr = new Graph();
+			var nod = gr.FindNode(0);
+			Assert.IsNotNull(nod);
+		}
+
+		[ExpectedException(typeof (VfException))]
+		[Test]
+		public void TestInsertEdge()
+		{
+			object attr;
+			var gr = new Graph();
+			var idFrom = gr.InsertNode(0);
+			var idTo = gr.InsertNode(1);
+			gr.InsertEdge(idFrom, idTo, 100);
+			Assert.AreEqual(gr.OutEdgeCount(idFrom), 1);
+			Assert.AreEqual(gr.OutEdgeCount(idTo), 0);
+			var idEdge = gr.GetOutEdge(idFrom, 0, out attr);
+			Assert.AreEqual(100, (int) attr);
+			Assert.AreEqual(idTo, idEdge);
+
+			// Try inserting the same edge twice to trigger exception...
+			gr.InsertEdge(0, 1, 200);
+		}
+
+		[ExpectedException(typeof (VfException))]
+		[Test]
+		public void TestInsertNode()
+		{
+			var gr = new Graph();
+			gr.InsertNode(1);
+			var nod = gr.FindNode(0);
+			Assert.IsNotNull(nod);
+			nod = gr.FindNode(1);
+			Assert.IsNotNull(nod);
+		}
+
+		[Test]
+		public void TestShuffle()
+		{
+			var rnd = new Random(10);
+			const int count = 100;
+			var ariShuffle = new int[count];
+
+			for (var i = 0; i < count; i++)
+			{
+				ariShuffle[i] = i;
+			}
+			Assert.AreEqual(0, ariShuffle[0]);
+			Assert.AreEqual(99, ariShuffle[99]);
+			Graph.Shuffle(ariShuffle, rnd);
+			Assert.AreNotEqual(0, ariShuffle[0]);
+			Assert.AreNotEqual(99, ariShuffle[99]);
+
+			var iTotal = 0;
+			for (var i = 0; i < count; i++)
+			{
+				iTotal += ariShuffle[i];
+			}
+			Assert.AreEqual(count * (count - 1) / 2, iTotal);
+		}
 	}
 }

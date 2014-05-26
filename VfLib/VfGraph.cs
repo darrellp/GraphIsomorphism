@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 #if NUNIT
 using NUnit.Framework;
@@ -5,10 +6,10 @@ using NUnit.Framework;
 
 namespace vflibcs
 {
-	class VfGraph
+	class VfGraph<TAttr>
 	{
 		#region Private Variables
-		readonly VfnNode[] _arNodes;
+		readonly VfnNode<TAttr>[] _arNodes;
 		#endregion
 
 		#region Properties
@@ -74,79 +75,67 @@ namespace vflibcs
 			return ret;
 		}
 
-		internal VfGraph(IGraphLoader loader, Dictionary<int, int> mpInodVfInodGraph = null)
+		internal VfGraph(IGraphLoader<TAttr> loader, Dictionary<int, int> mpInodVfInodGraph = null)
 		{
 			if (mpInodVfInodGraph == null)
 			{
-				mpInodVfInodGraph = (new CmpNodeDegrees(loader)).Permutation;
+				mpInodVfInodGraph = (new CmpNodeDegrees<TAttr>(loader)).Permutation;
 			}
-			_arNodes = new VfnNode[loader.NodeCount];
+			_arNodes = new VfnNode<TAttr>[loader.NodeCount];
 			var mpInodGraphInodVf = ReversePermutation(mpInodVfInodGraph);
 			var dctEdge = new Dictionary<VfeNode, VfeNode>();
 
 			for (var inodVf = 0; inodVf < loader.NodeCount; inodVf++)
 			{
-				_arNodes[inodVf] = new VfnNode(loader, mpInodVfInodGraph[inodVf], dctEdge, mpInodGraphInodVf);
+				_arNodes[inodVf] = new VfnNode<TAttr>(loader, mpInodVfInodGraph[inodVf], dctEdge, mpInodGraphInodVf);
 			}
 		}
 		#endregion
+	}
 
+	class VfGraph : VfGraph<Object>
+	{
+		internal VfGraph(IGraphLoader<Object> loader, Dictionary<int, int> mpInodVfInodGraph = null) : base(loader, mpInodVfInodGraph) {}
+	}
+
+	[TestFixture]
+	public class VfGraphTester
+	{
 		#region NUNIT Testing
 #if NUNIT
-		[TestFixture]
-		public class VfGraphTester
+		VfGraph SetupGraph()
 		{
-			VfGraph SetupGraph()
-			{
-				var graph = new Graph();
-				Assert.AreEqual(0, graph.InsertNode());
-				Assert.AreEqual(1, graph.InsertNode());
-				Assert.AreEqual(2, graph.InsertNode());
-				Assert.AreEqual(3, graph.InsertNode());
-				Assert.AreEqual(4, graph.InsertNode());
-				Assert.AreEqual(5, graph.InsertNode());
-				graph.InsertEdge(0, 1);
-				graph.InsertEdge(1, 2);
-				graph.InsertEdge(2, 3);
-				graph.InsertEdge(3, 4);
-				graph.InsertEdge(4, 5);
-				graph.InsertEdge(5, 0);
-				graph.DeleteNode(0);
-				graph.DeleteNode(1);
-				graph.InsertEdge(5, 2);
-				graph.InsertEdge(2, 4);
+			var graph = new Graph();
+			Assert.AreEqual(0, graph.InsertNode());
+			Assert.AreEqual(1, graph.InsertNode());
+			Assert.AreEqual(2, graph.InsertNode());
+			Assert.AreEqual(3, graph.InsertNode());
+			Assert.AreEqual(4, graph.InsertNode());
+			Assert.AreEqual(5, graph.InsertNode());
+			graph.InsertEdge(0, 1);
+			graph.InsertEdge(1, 2);
+			graph.InsertEdge(2, 3);
+			graph.InsertEdge(3, 4);
+			graph.InsertEdge(4, 5);
+			graph.InsertEdge(5, 0);
+			graph.DeleteNode(0);
+			graph.DeleteNode(1);
+			graph.InsertEdge(5, 2);
+			graph.InsertEdge(2, 4);
 
-				return new VfGraph(graph);
-			}
+			return new VfGraph(graph);
+		}
 
-			[Test]
-			public void TestPermutations()
-			{
-				var graph = new Graph();
-				Assert.AreEqual(0, graph.InsertNode());
-				Assert.AreEqual(1, graph.InsertNode());
-				Assert.AreEqual(2, graph.InsertNode());
-				graph.InsertEdge(1, 0);
-				graph.InsertEdge(1, 2);
-				var vfg = new VfGraph(graph);
-				var arOut = new int[vfg._arNodes[0].OutNeighbors.Count];
-				vfg._arNodes[0].OutNeighbors.CopyTo(arOut, 0);
-				var inodNeighbor1 = arOut[0];
-				var inodNeighbor2 = arOut[1];
-				Assert.IsTrue(inodNeighbor1 == 1 && inodNeighbor2 == 2 || inodNeighbor1 == 2 && inodNeighbor2 == 1);
-			}
+		[Test]
+		public void TestConstructor()
+		{
+			Assert.IsNotNull(SetupGraph());
+		}
 
-			[Test]
-			public void TestConstructor()
-			{
-				Assert.IsNotNull(SetupGraph());
-			}
-
-			[Test]
-			public void TestNodeCount()
-			{
-				Assert.AreEqual(4, SetupGraph().NodeCount);
-			}
+		[Test]
+		public void TestNodeCount()
+		{
+			Assert.AreEqual(4, SetupGraph().NodeCount);
 		}
 #endif
 		#endregion

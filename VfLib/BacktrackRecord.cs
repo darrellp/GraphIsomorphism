@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 #if NUNIT
 using NUnit.Framework;
@@ -14,7 +15,7 @@ namespace vflibcs
 	/// There are only two actions taken in the course of a backtrack record -
 	/// matching nodes and reclassifying nodes into different groups.
 	/// </remarks>
-	class BacktrackRecord
+	class BacktrackRecord<TAttr>
 	{
 		#region Private Variables
 		// List of actions to be undone on backtrack
@@ -35,7 +36,7 @@ namespace vflibcs
 		/// <param name="inod1">Node index in the first graph</param>
 		/// <param name="inod2">Node index in the second graph</param>
 		/// <param name="vfs">State determining the isomorphism</param>
-		internal void SetMatch(int inod1, int inod2, VfState vfs)
+		internal void SetMatch(int inod1, int inod2, VfState<TAttr> vfs)
 		{
 			// Add both nodes to the "In Mapping" group
 			MoveToGroup(1, inod1, Group.ContainedInMapping, vfs);
@@ -63,8 +64,8 @@ namespace vflibcs
 		/// <param name="inod">Node index of node to act on</param>
 		/// <param name="grpNew">New group to potentially move node to</param>
 		/// <param name="vfs">State determining the isomorphism</param>
- 
-		internal void MoveToGroup(int iGraph, int inod, Group grpNew, VfState vfs)
+
+		internal void MoveToGroup(int iGraph, int inod, Group grpNew, VfState<TAttr> vfs)
 		{
 			var vfg = iGraph == 1 ? vfs.Vfgr1 : vfs.Vfgr2;
 			var grpOld = vfg.GetGroup(inod);
@@ -92,7 +93,7 @@ namespace vflibcs
 		/// Undo the actions taken for this backtrack record
 		/// </summary>
 		/// <param name="vfs">State to undo the actions in</param>
-		internal void Backtrack(VfState vfs)
+		internal void Backtrack(VfState<TAttr> vfs)
 		{
 			_lstActions.ForEach(action => action.Backtrack(vfs));
 		}
@@ -103,7 +104,7 @@ namespace vflibcs
 		[TestFixture]
 		public class BacktrackRecordTester
 		{
-			VfState VfsTest()
+			VfState<Object> VfsTest()
 			{
 				var graph1 = new Graph();
 				Assert.AreEqual(0, graph1.InsertNode());
@@ -137,13 +138,13 @@ namespace vflibcs
 				graph2.InsertEdge(0, 5);
 				graph2.InsertEdge(4, 1);
 
-				return new VfState(graph1, graph2);
+				return new VfState<Object>(graph1, graph2);
 			}
 
 			[Test]
 			public void TestConstructor()
 			{
-				Assert.IsNotNull(new BacktrackRecord());
+				Assert.IsNotNull(new BacktrackRecord<TAttr>());
 			}
 
 			[Test]
@@ -173,4 +174,6 @@ namespace vflibcs
 #endif
 		#endregion
 	}
+
+	class BacktrackRecord : BacktrackRecord<Object> {}
 }

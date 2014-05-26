@@ -14,7 +14,7 @@ namespace vflibcs
 {
 	// Struct representing a full isomorphism mapping
 
-	public class VfState
+	public class VfState<TAttr>
 	{
 		#region Private Variables
 		internal const int MapIllegal = -1;
@@ -33,8 +33,8 @@ namespace vflibcs
 
 		// The original ILoader's - needed to map back the permutation
 		// to the original node id's after the match
-		private readonly IGraphLoader _ldr1;
-		private readonly IGraphLoader _ldr2;
+		private readonly IGraphLoader<TAttr> _ldr1;
+		private readonly IGraphLoader<TAttr> _ldr2;
 
 		// The actual mappings we're building up
 		private readonly Dictionary<int, int> _isomorphism1To2;
@@ -186,8 +186,8 @@ namespace vflibcs
 		}
 
 		// The two graphs we're comparing
-		internal VfGraph Vfgr2 { get; set; }
-		internal VfGraph Vfgr1 { get; set; }
+		internal VfGraph<TAttr> Vfgr2 { get; set; }
+		internal VfGraph<TAttr> Vfgr1 { get; set; }
 
 		// Lists of nodes not yet participating in the current isomorphism
 		// These lists are sorted on index but since the original nodes were
@@ -230,7 +230,7 @@ namespace vflibcs
 		#endregion
 
 		#region Constructors
-		public VfState(IGraphLoader loader1, IGraphLoader loader2, bool fIsomorphism = false, bool fContextCheck = false, bool fFindAll = false)
+		public VfState(IGraphLoader<TAttr> loader1, IGraphLoader<TAttr> loader2, bool fIsomorphism = false, bool fContextCheck = false, bool fFindAll = false)
 		{
 			LstIn1 = new SortedListNoValue<int>();
 			LstOut1 = new SortedListNoValue<int>();
@@ -257,10 +257,10 @@ namespace vflibcs
 			}
 
 			// Node indices in VfGraphs are sorted by vertex degree
-			_degreeSortedToOriginal1 = new CmpNodeDegrees(loader1).Permutation;
-			_degreeSortedToOriginal2 = new CmpNodeDegrees(loader2).Permutation;
-			Vfgr1 = new VfGraph(loader1, _degreeSortedToOriginal1);
-			Vfgr2 = new VfGraph(loader2, _degreeSortedToOriginal2);
+			_degreeSortedToOriginal1 = new CmpNodeDegrees<TAttr>(loader1).Permutation;
+			_degreeSortedToOriginal2 = new CmpNodeDegrees<TAttr>(loader2).Permutation;
+			Vfgr1 = new VfGraph<TAttr>(loader1, _degreeSortedToOriginal1);
+			Vfgr2 = new VfGraph<TAttr>(loader2, _degreeSortedToOriginal2);
 
 			// Set up space for isomorphism mappings
 			_isomorphism1To2 = new Dictionary<int, int>(loader1.NodeCount);
@@ -372,8 +372,8 @@ namespace vflibcs
 				return false;
 			}
 
-			var stkcf = new Stack<CandidateFinder>();
-			var stkbr = new Stack<BacktrackRecord>();
+			var stkcf = new Stack<CandidateFinder<TAttr>>();
+			var stkbr = new Stack<BacktrackRecord<TAttr>>();
 
 			var fPopOut = false;
 #if GATHERSTATS
@@ -398,8 +398,8 @@ namespace vflibcs
 			// Non-recursive implementation of a formerly recursive function
 			while (true)
 			{
-				CandidateFinder cf;
-				BacktrackRecord btr;
+				CandidateFinder<TAttr> cf;
+				BacktrackRecord<TAttr> btr;
 
 				// If it's time to backtrack...
 				if (fPopOut)
@@ -425,10 +425,10 @@ namespace vflibcs
 				else
 				{
 					// Moving forward - new candidate finder
-					cf = new CandidateFinder(this);
+					cf = new CandidateFinder<TAttr>(this);
 
 					// and start a new backtracking record in case this candidate doesn't work
-					btr = new BacktrackRecord();
+					btr = new BacktrackRecord<TAttr>();
 				}
 
 				// Assume failure
@@ -518,7 +518,7 @@ namespace vflibcs
 		/// <param name="vfgr">Graph which contains the vertex</param>
 		/// <param name="grp">Classification to check for</param>
 		/// <returns>Count of vertices in list which are classified properly</returns>
-		private int GetGroupCountInList(IEnumerable<int> lstOfNodeIndices, VfGraph vfgr, Group grp)
+		private int GetGroupCountInList(IEnumerable<int> lstOfNodeIndices, VfGraph<TAttr> vfgr, Group grp)
 		{
 			return lstOfNodeIndices.Count(inod => ((int) vfgr.GetGroup(inod) & (int) grp) != 0);
 		}
@@ -697,7 +697,7 @@ namespace vflibcs
 		/// <param name="mtc">Proposed match</param>
 		/// <param name="btr">BacktrackRecord to record actions into</param>
 		/// <returns>True if match is locally consistent with a full isomorphism</returns>
-		private bool FAddMatchToSolution(Match mtc, BacktrackRecord btr)
+		private bool FAddMatchToSolution(Match mtc, BacktrackRecord<TAttr> btr)
 		{
 			var inod1 = mtc.Inod1;
 			var inod2 = mtc.Inod2;
@@ -789,7 +789,7 @@ namespace vflibcs
 		{
 			// Moves to the mapping are handled by the mapping arrays and aren't handled here.
 
-			VfGraph vfg;
+			VfGraph<TAttr> vfg;
 			SortedListNoValue<int> disconnectedList, outList, inList;
 
 			if (iGraph == 1)
@@ -863,7 +863,17 @@ namespace vflibcs
 			vfg.SetGroup(inod, grpNew);
 		}
 		#endregion
+	}
 
+	public class VfState : VfState<Object>
+	{
+		public VfState(IGraphLoader<Object> loader1, IGraphLoader<Object> loader2, bool fIsomorphism = false, bool fContextCheck = false, bool fFindAll = false) :
+			base(loader1, loader2, fIsomorphism, fContextCheck, fFindAll) {}
+	}
+
+	// ReSharper disable once ClassNeverInstantiated.Global
+	public class VfStateTests
+	{
 		#region NUNIT Testing
 #if NUNIT
 		[TestFixture]
@@ -962,12 +972,6 @@ namespace vflibcs
 			}
 
 			[Test]
-			public void TestFCompleteMatch()
-			{
-				Assert.IsFalse(VfsTest().FCompleteMatch());
-			}
-
-			[Test]
 			public void TestMakeMove()
 			{
 				var vfs = VfsTest();
@@ -975,15 +979,6 @@ namespace vflibcs
 				Assert.AreEqual(1, vfs.LstOut1.Count);
 				Assert.AreEqual(5, vfs.LstDisconnected1.Count);
 				Assert.AreEqual(Group.FromMapping, vfs.Vfgr1.GetGroup(0));
-			}
-
-			[Test]
-			public void TestSetMapping()
-			{
-				var vfs = VfsTest();
-				vfs.SetIsomorphic(0, 1);
-				Assert.AreEqual(1, vfs._isomorphism1To2[0]);
-				Assert.AreEqual(0, vfs._isomorphism2To1[1]);
 			}
 
 			[Test]
@@ -1174,7 +1169,7 @@ namespace vflibcs
 				var arprm2To1 = vfs.Mapping2To1;
 				Assert.AreEqual(1, arprm1To2[2]);
 				Assert.AreEqual(0, arprm1To2[3]);
-				Assert.AreEqual(MapIllegal, arprm1To2[1]);
+				Assert.AreEqual(-1, arprm1To2[1]);
 				Assert.AreEqual(3, arprm2To1[0]);
 				Assert.AreEqual(2, arprm2To1[1]);
 			}
@@ -1190,15 +1185,15 @@ namespace vflibcs
 
 				public bool FCompatible(IContextCheck icc)
 				{
-					return ((NodeColor) icc)._strColor == _strColor;
+					return ((NodeColor)icc)._strColor == _strColor;
 				}
 			}
 
 			[Test]
 			public void TestContextCheck()
 			{
-				var graph1 = new Graph();
-				var graph2 = new Graph();
+				var graph1 = new Graph<NodeColor>();
+				var graph2 = new Graph<NodeColor>();
 
 				graph1.InsertNode(new NodeColor("Blue"));
 				graph1.InsertNode(new NodeColor("Red"));
@@ -1222,14 +1217,14 @@ namespace vflibcs
 				graph2.InsertEdge(3, 4);
 				graph2.InsertEdge(4, 0);
 
-				var vfs = new VfState(graph1, graph2, true);
+				var vfs = new VfState<NodeColor>(graph1, graph2, true);
 				Assert.IsTrue(vfs.FMatch());
 				var mpMatch = vfs.Mapping1To2;
 				// With no context checking, vertex 0 in the first graph can match
 				// vertex 0 in the second graph
 				Assert.AreEqual(0, mpMatch[0]);
 
-				vfs = new VfState(graph1, graph2, true, true);
+				vfs = new VfState<NodeColor>(graph1, graph2, true, true);
 				Assert.IsTrue(vfs.FMatch());
 				mpMatch = vfs.Mapping1To2;
 				// With context checking, Blue in first circular graph has to map to blue

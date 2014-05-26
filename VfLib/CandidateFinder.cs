@@ -1,13 +1,14 @@
+using System;
 #if NUNIT
 using NUnit.Framework;
 #endif
 
 namespace vflibcs
 {
-	class CandidateFinder
+	class CandidateFinder<TAttr>
 	{
 		#region Private variables
-		readonly VfState _vfs;
+		readonly VfState<TAttr> _vfs;
 		readonly int[] _arinodGraph1;
 		int _iinod;
 		Match _mch;
@@ -27,7 +28,7 @@ namespace vflibcs
 			_mch = new Match(inod1, inod2);
 		}
 
-		internal CandidateFinder(VfState vfs)
+		internal CandidateFinder(VfState<TAttr> vfs)
 		{
 			_vfs = vfs;
 
@@ -90,10 +91,15 @@ namespace vflibcs
 			return null;
 		}
 		#endregion
+	}
 
-		#region NUNIT Testing
-#if NUNIT
-		[TestFixture]
+	class CandidateFinder : CandidateFinder<Object>
+	{
+		internal CandidateFinder(VfState vfs) : base(vfs) {}
+	}
+
+	public class CFTests
+	{
 		public class VfGraphTester
 		{
 			VfState VfsTest()
@@ -144,7 +150,5 @@ namespace vflibcs
 				Assert.AreEqual(0, mch.Inod2);
 			}
 		}
-#endif
-		#endregion
 	}
 }
