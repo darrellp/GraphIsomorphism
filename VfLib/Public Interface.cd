@@ -1,7 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Class Name="vflibcs.Graph" BaseTypeListCollapsed="true">
-    <Position X="2.25" Y="0.5" Width="1.5" />
+    <Position X="2.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Graph.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="vflibcs.VfState" Collapsed="true">
+    <Position X="0.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>VfState.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="vflibcs.Graph&lt;TAttr&gt;">
+    <Position X="2.25" Y="0.5" Width="2" />
     <Members>
       <Method Name="FindNode" Hidden="true" />
       <Method Name="IsomorphicShuffling" Hidden="true" />
@@ -9,17 +23,12 @@
       <Field Name="Nodes" Hidden="true" />
     </Members>
     <NestedTypes>
-      <Class Name="vflibcs.Graph.ENode" Collapsed="true">
+      <Class Name="vflibcs.Graph&lt;TAttr&gt;.ENode" Collapsed="true">
         <TypeIdentifier>
           <NewMemberFileName>Graph.cs</NewMemberFileName>
         </TypeIdentifier>
       </Class>
-      <Class Name="vflibcs.Graph.NNode" Collapsed="true">
-        <TypeIdentifier>
-          <NewMemberFileName>Graph.cs</NewMemberFileName>
-        </TypeIdentifier>
-      </Class>
-      <Class Name="vflibcs.Graph.GraphTester" Collapsed="true">
+      <Class Name="vflibcs.Graph&lt;TAttr&gt;.NNode" Collapsed="true">
         <TypeIdentifier>
           <NewMemberFileName>Graph.cs</NewMemberFileName>
         </TypeIdentifier>
@@ -29,9 +38,9 @@
       <HashCode>AAAgAAAAABAAIQAAECAAQAAEBAAEAIgAYBABAAAAEAQ=</HashCode>
       <FileName>Graph.cs</FileName>
     </TypeIdentifier>
-    <Lollipop Position="0.2" Collapsed="true" />
+    <Lollipop Position="0.2" />
   </Class>
-  <Class Name="vflibcs.VfState">
+  <Class Name="vflibcs.VfState&lt;TAttr&gt;">
     <Position X="0.5" Y="0.5" Width="1.5" />
     <Members>
       <Field Name="_degreeSortedToOriginal1" Hidden="true" />
@@ -83,34 +92,34 @@
       <Property Name="Vfgr1" Hidden="true" />
       <Property Name="Vfgr2" Hidden="true" />
     </Members>
-    <NestedTypes>
-      <Class Name="vflibcs.VfState.VfGraphTester" Collapsed="true">
-        <TypeIdentifier>
-          <NewMemberFileName>VfState.cs</NewMemberFileName>
-        </TypeIdentifier>
-      </Class>
-    </NestedTypes>
     <TypeIdentifier>
       <HashCode>YkgHODAGYQiAEAAAYABAACU2QAhAggAASGEIAACRBBA=</HashCode>
       <FileName>VfState.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Struct Name="vflibcs.FullMapping">
-    <Position X="7.5" Y="0.5" Width="2" />
+    <Position X="6.25" Y="0.5" Width="2" />
     <TypeIdentifier>
       <HashCode>AAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>FullMapping.cs</FileName>
     </TypeIdentifier>
   </Struct>
   <Interface Name="vflibcs.IContextCheck">
-    <Position X="5.75" Y="0.5" Width="1.5" />
+    <Position X="8.5" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>IContextCheck.cs</FileName>
     </TypeIdentifier>
   </Interface>
   <Interface Name="vflibcs.IGraphLoader">
-    <Position X="4" Y="0.5" Width="1.5" />
+    <Position X="4.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>IGraphLoader.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="vflibcs.IGraphLoader&lt;T&gt;">
+    <Position X="4.5" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAABAAAQAAECAAQAAAAAAEAIgAAAAAAAAAAAA=</HashCode>
       <FileName>IGraphLoader.cs</FileName>
