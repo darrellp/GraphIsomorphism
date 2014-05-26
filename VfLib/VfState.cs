@@ -45,8 +45,8 @@ namespace vflibcs
 		private readonly int[] _degreeSortedToOriginal2;
 
 		// Above mappings but indexed from/to node id's from the original maps.
-		private int[] _armpNid1Nid2;
-		private int[] _armpNid2Nid1;
+		private int[] _isomorphismNid1ToNid2;
+		private int[] _isomorphismNid2ToNid1;
 
 		// List of Isomorphic mappings in original maps
 		private List<FullMapping> _lstfm;
@@ -74,7 +74,7 @@ namespace vflibcs
 		#region Properties
 		private bool FMassagedPermutation
 		{
-			get { return _armpNid1Nid2 != null; }
+			get { return _isomorphismNid1ToNid2 != null; }
 		}
 
 		private bool FMassagedPermutationList
@@ -94,7 +94,7 @@ namespace vflibcs
 				{
 					MassagePermutation();
 				}
-				return _armpNid1Nid2;
+				return _isomorphismNid1ToNid2;
 			}
 		}
 
@@ -110,7 +110,7 @@ namespace vflibcs
 				{
 					MassagePermutation();
 				}
-				return _armpNid2Nid1;
+				return _isomorphismNid2ToNid1;
 			}
 		}
 
@@ -133,32 +133,37 @@ namespace vflibcs
 
 		private void MassagePermutation()
 		{
-			MassagePermutations(_isomorphism1To2, _isomorphism2To1, _degreeSortedToOriginal1, _degreeSortedToOriginal2,
-				out _armpNid1Nid2, out _armpNid2Nid1);
+			MassagePermutations(
+				_isomorphism1To2,
+				_isomorphism2To1,
+				_degreeSortedToOriginal1,
+				_degreeSortedToOriginal2,
+				out _isomorphismNid1ToNid2,
+				out _isomorphismNid2ToNid1);
 		}
 
 		private void MassagePermutations(
-			int[] arinodMap1To2,
-			int[] arinodMap2To1,
-			int[] armpInodGraphInodVf1,
-			int[] armpInodGraphInodVf2,
-			out int[] armpNid1Nid2,
-			out int[] armpNid2Nid1)
+			int[] isomorphism1To2,
+			int[] isomorphism2To1,
+			int[] degreeSortedToOriginal1,
+			int[] degreeSortedToOriginal2,
+			out int[] isomorphismNid1ToNid2,
+			out int[] isomorphismNid2ToNid1)
 		{
 			// Holding areas for new permutations
-			armpNid1Nid2 = new int[arinodMap1To2.Length];
-			armpNid2Nid1 = new int[arinodMap2To1.Length];
+			isomorphismNid1ToNid2 = new int[isomorphism1To2.Length];
+			isomorphismNid2ToNid1 = new int[isomorphism2To1.Length];
 
-			for (var i = 0; i < arinodMap1To2.Length; i++)
+			for (var i = 0; i < isomorphism1To2.Length; i++)
 			{
-				var inodMap = arinodMap1To2[armpInodGraphInodVf1[i]];
-				armpNid1Nid2[i] = (inodMap == MapIllegal ? MapIllegal : _ldr2.IdFromPos(_degreeSortedToOriginal2[inodMap]));
+				var inodMap = isomorphism1To2[degreeSortedToOriginal1[i]];
+				isomorphismNid1ToNid2[i] = (inodMap == MapIllegal ? MapIllegal : _ldr2.IdFromPos(_degreeSortedToOriginal2[inodMap]));
 			}
 
-			for (var i = 0; i < arinodMap2To1.Length; i++)
+			for (var i = 0; i < isomorphism2To1.Length; i++)
 			{
 				// Shouldn't be any map_illegal values in the second graph's array
-				armpNid2Nid1[i] = _ldr1.IdFromPos(_degreeSortedToOriginal1[arinodMap2To1[armpInodGraphInodVf2[i]]]);
+				isomorphismNid2ToNid1[i] = _ldr1.IdFromPos(_degreeSortedToOriginal1[isomorphism2To1[degreeSortedToOriginal2[i]]]);
 			}
 		}
 
@@ -1156,6 +1161,8 @@ namespace vflibcs
 			{
 				var graph1 = new Graph();
 				graph1.InsertNodes(4);
+				// Experimenting
+				graph1.DeleteNode(0);
 				graph1.InsertEdge(2, 3);
 
 				var graph2 = new Graph();
