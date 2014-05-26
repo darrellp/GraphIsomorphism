@@ -66,6 +66,7 @@
     <Compile Include="BacktrackRecord.cs" />
     <Compile Include="CandidateFinder.cs" />
     <Compile Include="CmpNodeDegrees.cs" />
+    <Compile Include="FullMapping.cs" />
     <Compile Include="Graph.cs" />
     <Compile Include="IContextCheck.cs" />
     <Compile Include="IGraphLoader.cs" />

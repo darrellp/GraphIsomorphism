@@ -13,25 +13,8 @@ using NUnit.Framework;
 namespace vflibcs
 {
 	// Struct representing a full isomorphism mapping
-	public struct FullMapping
-	{
-		public Dictionary<int, int> IsomorphismNid1ToNid2;
-		public Dictionary<int, int> IsomorphismNid2ToNid1;
 
-		public FullMapping(int count1, int count2)
-		{
-			IsomorphismNid1ToNid2 = new Dictionary<int, int>(count1);
-			IsomorphismNid2ToNid1 = new Dictionary<int, int>(count2);
-		}
-
-		public FullMapping(Dictionary<int, int> dict1, Dictionary<int, int> dict2)
-		{
-			IsomorphismNid1ToNid2 = new Dictionary<int, int>(dict1);
-			IsomorphismNid2ToNid1 = new Dictionary<int, int>(dict2);
-		}
-	}
-
-	internal class VfState
+	public class VfState
 	{
 		#region Private Variables
 		internal const int MapIllegal = -1;
