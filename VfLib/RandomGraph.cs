@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 #if NUNIT
 using NUnit.Framework;
 
@@ -40,7 +41,7 @@ namespace vflibcs
 		{
 			var cEdgesNeeded = (int) (cnod * (cnod - 1) * _pctEdges);
 			var cEdgesSoFar = 0;
-			var setEdges = new Set<EdgeKey>();
+			var setEdges = new HashSet<EdgeKey>();
 			var graph = new Graph();
 
 			graph.InsertNodes(cnod);
