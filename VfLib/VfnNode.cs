@@ -83,8 +83,6 @@ namespace vflibcs
 		{
 			get
 			{
-				//List<int> lstIn = new List<int>(_arvfeEdgeIn.Length);
-				//lstIn.AddRange(_arvfeEdgeIn.Select(vfe => vfe.InodFrom));
 				return _arvfeEdgeIn.Select(vfe => vfe.InodFrom).ToList();
 			}
 		}
@@ -99,11 +97,9 @@ namespace vflibcs
 		private void MakeEdges(IGraphLoader<TAttr> loader, int nid, Dictionary<VfeNode, VfeNode> dctEdge, Dictionary<int, int> mpInodGraphInodVf)
 		{
 			var inodGraph = loader.PosFromId(nid);
-			var inodVf = mpInodGraphInodVf[inodGraph];
-			var vfeKey = new VfeNode(0, 0, null) {InodFrom = inodVf};
+			var vfeKey = new VfeNode(mpInodGraphInodVf[inodGraph], 0, null);
 
 			MakeOutEdges(loader, nid, dctEdge, mpInodGraphInodVf, ref vfeKey);
-			vfeKey.InodTo = inodVf;
 			MakeInEdges(loader, nid, dctEdge, mpInodGraphInodVf, ref vfeKey);
 		}
 

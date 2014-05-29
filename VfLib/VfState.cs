@@ -19,17 +19,10 @@ namespace vflibcs
 		#region Private Variables
 		internal const int MapIllegal = -1;
 
-		// Mapping between node positions in VfGraph and the original Graph.
+		// Mapping between node positions in VfGraph and the positions in the original Graph.
 		// This is just the permutation to sort the original graph nodes by degrees.
 		private readonly Dictionary<int, int> _degreeSortedToOriginal1;
 		private readonly Dictionary<int, int> _degreeSortedToOriginal2;
-
-		// Above mappings but indexed from/to node id's from the original maps.
-		private Dictionary<int, int> _isomorphismNid1ToNid2;
-		private Dictionary<int, int> _isomorphismNid2ToNid1;
-
-		// List of Isomorphic mappings in original maps
-		private List<FullMapping> _lstfm;
 
 		// The original ILoader's - needed to map back the permutation
 		// to the original node id's after the match
@@ -37,92 +30,16 @@ namespace vflibcs
 		private readonly IGraphLoader<TAttr> _ldr2;
 
 		// The actual mappings we're building up
-		private readonly Dictionary<int, int> _isomorphism1To2;
-		private readonly Dictionary<int, int> _isomorphism2To1;
-
-		// All the mappings we've located thus far...
-		private readonly List<FullMapping> _lstMappings = new List<FullMapping>();
+		private readonly Dictionary<int, int> _vfGraphInode1To2Isomorphism;
+		private readonly Dictionary<int, int> _vfGraphInode2To1Isomorphism;
 
 		private int _inDegreeTotal1, _inDegreeTotal2, _outDegreeTotal1, _outDegreeTotal2;
 
-		private bool _fSuccessfulMatch; // Have we made a successful match?
 		private bool _fMatched; // Have we attempted a match?
 		private readonly bool _fContextCheck; // Do we context check using the attributes?
 		#endregion
 
 		#region Properties
-		private bool FMassagedPermutation
-		{
-			get { return _isomorphismNid1ToNid2 != null; }
-		}
-
-		private bool FMassagedPermutationList
-		{
-			get { return _lstfm != null; }
-		}
-
-		public Dictionary<int, int> Mapping1To2
-		{
-			get
-			{
-				if (!_fSuccessfulMatch)
-				{
-					return null;
-				}
-				if (!FMassagedPermutation)
-				{
-					MassagePermutation();
-				}
-				return _isomorphismNid1ToNid2;
-			}
-		}
-
-		public Dictionary<int, int> Mapping2To1
-		{
-			get
-			{
-				if (!_fSuccessfulMatch)
-				{
-					return null;
-				}
-				if (!FMassagedPermutation)
-				{
-					MassagePermutation();
-				}
-				return _isomorphismNid2ToNid1;
-			}
-		}
-
-		public List<FullMapping> Mappings
-		{
-			get
-			{
-				// If never found a match return null
-				if (!_fSuccessfulMatch)
-				{
-					return null;
-				}
-				if (!FMassagedPermutationList)
-				{
-					MassagePermutationList();
-				}
-				return _lstfm;
-			}
-		}
-
-		/// <summary>
-		/// Turn current VfGraph to VfGraph Inode mapping into Graph to Graph nid mapping
-		/// </summary>
-		private void MassagePermutation()
-		{
-			VfGraphVfGraphInodeToGraphGraphNid(
-				_isomorphism1To2,
-				_degreeSortedToOriginal1,
-				_degreeSortedToOriginal2,
-				out _isomorphismNid1ToNid2,
-				out _isomorphismNid2ToNid1);
-		}
-
 		/// <summary>
 		/// Turn VfGraph to VfGraph Inode mapping into Graph to Graph nid mapping
 		/// </summary>
@@ -155,32 +72,6 @@ namespace vflibcs
 				var nid2 = _ldr2.IdFromPos(inode2);
 				isomorphismNid1ToNid2[nid1] = nid2;
 				isomorphismNid2ToNid1[nid2] = nid1;
-			}
-		}
-
-		/// <summary>
-		/// Produce all the full mappings found
-		/// </summary>
-		private void MassagePermutationList()
-		{
-			// Permutations to move from VfGraph inods to Graph inods
-			var armpInodGraphInodVf1 = VfGraph.ReversePermutation(_degreeSortedToOriginal1);
-			var armpInodGraphInodVf2 = VfGraph.ReversePermutation(_degreeSortedToOriginal2);
-			_lstfm = new List<FullMapping>(_lstMappings.Count);
-
-			var count1 = _isomorphism1To2.Count;
-			var count2 = _isomorphism2To1.Count;
-
-			foreach (var fm in _lstMappings)
-			{
-				var fmTmp = new FullMapping(count1, count2);
-				VfGraphVfGraphInodeToGraphGraphNid(
-					fm.IsomorphismNid1ToNid2,
-					armpInodGraphInodVf1,
-					armpInodGraphInodVf2,
-					out fmTmp.IsomorphismNid1ToNid2,
-					out fmTmp.IsomorphismNid2ToNid1);
-				_lstfm.Add(fmTmp);
 			}
 		}
 
@@ -261,19 +152,19 @@ namespace vflibcs
 			Vfgr2 = new VfGraph<TAttr>(loader2, _degreeSortedToOriginal2);
 
 			// Set up space for isomorphism mappings
-			_isomorphism1To2 = new Dictionary<int, int>(loader1.NodeCount);
-			_isomorphism2To1 = new Dictionary<int, int>(loader2.NodeCount);
+			_vfGraphInode1To2Isomorphism = new Dictionary<int, int>(loader1.NodeCount);
+			_vfGraphInode2To1Isomorphism = new Dictionary<int, int>(loader2.NodeCount);
 
 			// When we start no isomorphic mappings and all nodes are disconnected
 			// from the isomorphism.
 			for (var i = 0; i < loader1.NodeCount; i++)
 			{
-				_isomorphism1To2[i] = MapIllegal;
+				_vfGraphInode1To2Isomorphism[i] = MapIllegal;
 				LstDisconnected1.Add(i);
 			}
 			for (var i = 0; i < loader2.NodeCount; i++)
 			{
-				_isomorphism2To1[i] = MapIllegal;
+				_vfGraphInode2To1Isomorphism[i] = MapIllegal;
 				LstDisconnected2.Add(i);
 			}
 		}
@@ -448,7 +339,6 @@ namespace vflibcs
 						if (FAddMatchToSolution(mchCur, btr) && FCompleteMatch())
 						{
 							// Yea!  Isomorphism finished!
-							_fSuccessfulMatch = true;
 #if GATHERSTATS
 							Console.WriteLine("cBackTracks = {0}", cBackTracks);
 							Console.WriteLine("cSearchGuesses = {0}", cSearchGuesses);
@@ -457,7 +347,7 @@ namespace vflibcs
 							// Record this match and simulate a failure...
 							Dictionary<int, int> nidToNid1;
 							Dictionary<int, int> nidToNid2;
-							VfGraphVfGraphInodeToGraphGraphNid(_isomorphism1To2, _degreeSortedToOriginal1, _degreeSortedToOriginal2, out nidToNid1, out nidToNid2);
+							VfGraphVfGraphInodeToGraphGraphNid(_vfGraphInode1To2Isomorphism, _degreeSortedToOriginal1, _degreeSortedToOriginal2, out nidToNid1, out nidToNid2);
 							yield return new FullMapping(nidToNid1, nidToNid2);
 							stkcf.Push(cf);
 							stkbr.Push(btr);
@@ -499,14 +389,14 @@ namespace vflibcs
 		internal void SetIsomorphic(int inod1, int inod2)
 		{
 			// Set the mapping in both directions
-			_isomorphism1To2[inod1] = inod2;
-			_isomorphism2To1[inod2] = inod1;
+			_vfGraphInode1To2Isomorphism[inod1] = inod2;
+			_vfGraphInode2To1Isomorphism[inod2] = inod1;
 		}
 
 		// Undo a previously made mapping
 		internal void RemoveFromMappingList(int iGraph, int inod)
 		{
-			(iGraph == 1 ? _isomorphism1To2 : _isomorphism2To1)[inod] = MapIllegal;
+			(iGraph == 1 ? _vfGraphInode1To2Isomorphism : _vfGraphInode2To1Isomorphism)[inod] = MapIllegal;
 		}
 		#endregion
 
@@ -541,7 +431,7 @@ namespace vflibcs
 			var cnodInMapping1 = 0;
 
 			// For each vertex in lstConnected1 that is part of the isomorphism...
-			foreach (var inodMap in lstConnected1.Select(inod => _isomorphism1To2[inod]).Where(inodMap => inodMap != MapIllegal))
+			foreach (var inodMap in lstConnected1.Select(inod => _vfGraphInode1To2Isomorphism[inod]).Where(inodMap => inodMap != MapIllegal))
 			{
 				// Count the isomorphism participants from list1
 				cnodInMapping1++;
@@ -1178,31 +1068,6 @@ namespace vflibcs
 				Assert.AreNotEqual(0, matches.Length);
 			}
 
-			[Test]
-			public void TestPermutationMassage()
-			{
-				var graph1 = new Graph();
-				graph1.InsertNodes(4);
-				// Experimenting
-				graph1.DeleteNode(0);
-				graph1.InsertEdge(2, 3);
-
-				var graph2 = new Graph();
-				graph2.InsertNodes(2);
-				graph2.InsertEdge(1, 0);
-
-				var vfs = new VfState(graph1, graph2);
-				var matches = vfs.Matches().ToArray();
-				Assert.AreNotEqual(0, matches.Length);
-				var arprm1To2 = vfs.Mapping1To2;
-				var arprm2To1 = vfs.Mapping2To1;
-				Assert.AreEqual(1, arprm1To2[2]);
-				Assert.AreEqual(0, arprm1To2[3]);
-				Assert.AreEqual(-1, arprm1To2[1]);
-				Assert.AreEqual(3, arprm2To1[0]);
-				Assert.AreEqual(2, arprm2To1[1]);
-			}
-
 			private class NodeColor : IContextCheck
 			{
 				private readonly string _strColor;
@@ -1249,7 +1114,7 @@ namespace vflibcs
 				var vfs = new VfState<NodeColor>(graph1, graph2, true);
 				var matches = vfs.Matches().ToArray();
 				Assert.AreNotEqual(0, matches.Length);
-				var mpMatch = vfs.Mapping1To2;
+				var mpMatch = matches[0].IsomorphismNid1ToNid2;
 				// With no context checking, vertex 0 in the first graph can match
 				// vertex 0 in the second graph
 				Assert.AreEqual(0, mpMatch[0]);
@@ -1257,7 +1122,7 @@ namespace vflibcs
 				vfs = new VfState<NodeColor>(graph1, graph2, true, true);
 				matches = vfs.Matches().ToArray();
 				Assert.AreNotEqual(0, matches.Length);
-				mpMatch = vfs.Mapping1To2;
+				mpMatch = matches[0].IsomorphismNid1ToNid2;
 				// With context checking, Blue in first circular graph has to map to blue
 				// in second circular graph.
 				Assert.AreEqual(3, mpMatch[0]);
