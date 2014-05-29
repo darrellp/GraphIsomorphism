@@ -1028,12 +1028,12 @@ namespace vflibcs
 				// The converse is false
 				vfs = new VfState(gr2, gr1);
 				matches = vfs.Matches().ToArray();
-				Assert.AreNotEqual(0, matches.Length);
+				Assert.AreEqual(0, matches.Length);
 
 				// The two graphs are subgraph ismorphic but not ismorphic
 				vfs = new VfState(gr1, gr2, true /* fIsomorphism */);
 				matches = vfs.Matches().ToArray();
-				Assert.AreNotEqual(0, matches.Length);
+				Assert.AreEqual(0, matches.Length);
 			}
 
 			[Test]
@@ -1148,7 +1148,16 @@ namespace vflibcs
 				graph2 = rg.GetGraph(100);
 				vfs = new VfState(graph1, graph2);
 				matches = vfs.Matches().ToArray();
-				Assert.AreNotEqual(0, matches.Length);
+				Assert.AreEqual(0, matches.Length);
+
+				rg = new RandomGraph(0.3, 5000 /* seed */);
+				graph1 = rg.GetGraph(100);
+				rg = new RandomGraph(0.3, 5000 /* seed */);
+				graph2 = rg.GetGraph(100);
+				vfs = new VfState(graph1, graph2);
+				matches = vfs.Matches().ToArray();
+				Assert.AreEqual(1, matches.Length);
+
 			}
 
 #if BIGSLOWTEST
