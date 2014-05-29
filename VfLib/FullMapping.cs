@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace vflibcs
 {
-	public struct FullMapping
+	public class FullMapping
 	{
 		public Dictionary<int, int> IsomorphismNid1ToNid2;
 		public Dictionary<int, int> IsomorphismNid2ToNid1;

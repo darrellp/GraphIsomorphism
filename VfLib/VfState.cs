@@ -48,7 +48,6 @@ namespace vflibcs
 		private bool _fSuccessfulMatch; // Have we made a successful match?
 		private bool _fMatched; // Have we attempted a match?
 		private readonly bool _fContextCheck; // Do we context check using the attributes?
-		private readonly bool _fFindAll; // Find all subgraphs or just the first?
 		#endregion
 
 		#region Properties
@@ -116,7 +115,7 @@ namespace vflibcs
 		/// </summary>
 		private void MassagePermutation()
 		{
-			MassagePermutations(
+			VfGraphVfGraphInodeToGraphGraphNid(
 				_isomorphism1To2,
 				_degreeSortedToOriginal1,
 				_degreeSortedToOriginal2,
@@ -132,7 +131,7 @@ namespace vflibcs
 		/// <param name="degreeSortedToOriginal2">VfGraph2 Inode to Graph2 Inode mapping</param>
 		/// <param name="isomorphismNid1ToNid2">Returned Graph1 nid to Graph2 nid mapping</param>
 		/// <param name="isomorphismNid2ToNid1">Returned Graph2 nid to Graph1 nid mapping</param>
-		private void MassagePermutations(
+		private void VfGraphVfGraphInodeToGraphGraphNid(
 			Dictionary<int, int> isomorphism1To2,
 			Dictionary<int, int> degreeSortedToOriginal1,
 			Dictionary<int, int> degreeSortedToOriginal2,
@@ -175,7 +174,7 @@ namespace vflibcs
 			foreach (var fm in _lstMappings)
 			{
 				var fmTmp = new FullMapping(count1, count2);
-				MassagePermutations(
+				VfGraphVfGraphInodeToGraphGraphNid(
 					fm.IsomorphismNid1ToNid2,
 					armpInodGraphInodVf1,
 					armpInodGraphInodVf2,
@@ -230,7 +229,7 @@ namespace vflibcs
 		#endregion
 
 		#region Constructors
-		public VfState(IGraphLoader<TAttr> loader1, IGraphLoader<TAttr> loader2, bool fIsomorphism = false, bool fContextCheck = false, bool fFindAll = false)
+		public VfState(IGraphLoader<TAttr> loader1, IGraphLoader<TAttr> loader2, bool fIsomorphism = false, bool fContextCheck = false)
 		{
 			LstIn1 = new SortedListNoValue<int>();
 			LstOut1 = new SortedListNoValue<int>();
@@ -242,7 +241,6 @@ namespace vflibcs
 			_ldr2 = loader2;
 
 			_fContextCheck = fContextCheck;
-			_fFindAll = fFindAll;
 
 			if (fIsomorphism)
 			{
@@ -358,18 +356,30 @@ namespace vflibcs
 			return true;
 		}
 
-		private void RecordCurrentMatch()
+		// Find an isomorphism between a subgraph of _vfgr1 and the entirety of _vfgr2...
+		public FullMapping Match()
 		{
-			_lstMappings.Add(new FullMapping(_isomorphism1To2, _isomorphism2To1));
+			return Matches().DefaultIfEmpty().First();
 		}
 
-		// Find an isomorphism between a subgraph of _vfgr1 and the entirety of _vfgr2...
-		public bool FMatch()
+		public IEnumerable<FullMapping> Matches()
 		{
+			// Check for an empty second graph
+			if (_ldr2.NodeCount == 0)
+			{
+				// If the second is empty, check for a successful "match"
+				if (FnCompareDegrees(_ldr1.NodeCount, 0))
+				{
+					// Return empty mapping - successful, but nothing to map to
+					yield return new FullMapping(new Dictionary<int, int>(), new Dictionary<int, int>());
+				}
+				yield break;
+			}
+
 			// Quick easy check to make the degrees compatible.
 			if (!FCompatibleDegrees())
 			{
-				return false;
+				yield break;
 			}
 
 			var stkcf = new Stack<CandidateFinder<TAttr>>();
@@ -384,16 +394,9 @@ namespace vflibcs
 
 			if (_fMatched)
 			{
-				return false;
+				yield break;
 			}
 			_fMatched = true;
-
-			// If we've already got a complete isomorphism, we're done.
-			if (FCompleteMatch())
-			{
-				_fSuccessfulMatch = true;
-				return true;
-			}
 
 			// Non-recursive implementation of a formerly recursive function
 			while (true)
@@ -451,16 +454,14 @@ namespace vflibcs
 							Console.WriteLine("cSearchGuesses = {0}", cSearchGuesses);
 							Console.WriteLine("cInfeasible = {0}", cInfeasible);
 #endif
-							// If we're supposed to find more...
-							if (_fFindAll)
-							{
-								// Record this match and simulate a failure...
-								RecordCurrentMatch();
-								stkcf.Push(cf);
-								stkbr.Push(btr);
-								break;
-							}
-							return true;
+							// Record this match and simulate a failure...
+							Dictionary<int, int> nidToNid1;
+							Dictionary<int, int> nidToNid2;
+							VfGraphVfGraphInodeToGraphGraphNid(_isomorphism1To2, _degreeSortedToOriginal1, _degreeSortedToOriginal2, out nidToNid1, out nidToNid2);
+							yield return new FullMapping(nidToNid1, nidToNid2);
+							stkcf.Push(cf);
+							stkbr.Push(btr);
+							break;
 						}
 #if GATHERSTATS
 	// Made a bad guess, count it up...
@@ -485,7 +486,6 @@ namespace vflibcs
 			Console.WriteLine("cSearchGuesses = {0}", cSearchGuesses);
 			Console.WriteLine("cInfeasible = {0}", cInfeasible);
 #endif
-			return _fSuccessfulMatch;
 		}
 #endif
 		#endregion
@@ -867,8 +867,8 @@ namespace vflibcs
 
 	public class VfState : VfState<Object>
 	{
-		public VfState(IGraphLoader<Object> loader1, IGraphLoader<Object> loader2, bool fIsomorphism = false, bool fContextCheck = false, bool fFindAll = false) :
-			base(loader1, loader2, fIsomorphism, fContextCheck, fFindAll) {}
+		public VfState(IGraphLoader<Object> loader1, IGraphLoader<Object> loader2, bool fIsomorphism = false, bool fContextCheck = false) :
+			base(loader1, loader2, fIsomorphism, fContextCheck) {}
 	}
 
 	// ReSharper disable once ClassNeverInstantiated.Global
@@ -941,13 +941,14 @@ namespace vflibcs
 				gr2.InsertEdge(2, 1);
 				gr2.InsertEdge(1, 0);
 
-				var vfs = new VfState(gr1, gr2, false, false, true);
-				Assert.IsTrue(vfs.FMatch());
-				Assert.AreEqual(3, vfs.Mappings.Count);
+				var vfs = new VfState(gr1, gr2);
+				var matches = vfs.Matches().ToArray();
+				Assert.AreNotEqual(0, matches.Length);
+				Assert.AreEqual(3, matches.Length);
 
-				vfs = new VfState(gr1, gr2, true, false, true);
-				Assert.IsTrue(vfs.FMatch());
-				Assert.AreEqual(3, vfs.Mappings.Count);
+				vfs = new VfState(gr1, gr2, true);
+				matches = vfs.Matches().ToArray();
+				Assert.AreEqual(3, matches.Length);
 
 				gr2.InsertEdge(0, 1);
 				gr2.InsertEdge(1, 2);
@@ -956,13 +957,13 @@ namespace vflibcs
 				gr1.InsertEdge(2, 1);
 				gr1.InsertEdge(1, 0);
 
-				vfs = new VfState(gr1, gr2, false, false, true);
-				Assert.IsTrue(vfs.FMatch());
-				Assert.AreEqual(6, vfs.Mappings.Count);
+				vfs = new VfState(gr1, gr2);
+				matches = vfs.Matches().ToArray();
+				Assert.AreEqual(6, matches.Length);
 
-				vfs = new VfState(gr1, gr2, true, false, true);
-				Assert.IsTrue(vfs.FMatch());
-				Assert.AreEqual(6, vfs.Mappings.Count);
+				vfs = new VfState(gr1, gr2, true);
+				matches = vfs.Matches().ToArray();
+				Assert.AreEqual(6, matches.Length);
 			}
 
 			[Test]
@@ -988,33 +989,52 @@ namespace vflibcs
 				var gr2 = new Graph();
 
 				var vfs = new VfState(gr1, gr2);
-				Assert.IsTrue(vfs.FMatch());
+				var match = vfs.Match();
+				Assert.IsNotNull(match);			// Two empty graphs match
 				gr2.InsertNode();
 				vfs = new VfState(gr1, gr2);
-				Assert.IsFalse(vfs.FMatch());
+				match = vfs.Match();
+				Assert.IsNull(match);				// Graph with no nodes will not match one with a single isolated vertex
 				gr1.InsertNode();
 				vfs = new VfState(gr1, gr2);
-				Assert.IsTrue(vfs.FMatch());
+				match = vfs.Match();
+				Assert.IsNotNull(match);			// Two graphs with single isolated vertices match
 				gr1.InsertNode();
 				vfs = new VfState(gr1, gr2);
-				Assert.IsTrue(vfs.FMatch());
+				match = vfs.Match();
+				Assert.IsNotNull(match);			// Two isolated nodes match with one under default subgraph isomorphism
 				gr1.InsertEdge(0, 1);
 				vfs = new VfState(gr1, gr2);
-				Assert.IsTrue(vfs.FMatch());
-				vfs = new VfState(gr2, gr1);
-				Assert.IsFalse(vfs.FMatch());
+				match = vfs.Match();
+				Assert.IsNotNull(match);			// Connect the two and a subgraph isomorphism still works
 			}
 
 			[Test]
 			public void TestMatchComplex()
 			{
 				var vfs = VfsTest();
-				Assert.IsTrue(vfs.FMatch());
+				var matches = vfs.Matches().ToArray();
+				Assert.AreEqual(1, matches.Length);
+				var dict1 = matches[0].IsomorphismNid1ToNid2;
+				var dict2 = matches[0].IsomorphismNid2ToNid1;
+				Assert.AreEqual(1, dict1[0]);
+				Assert.AreEqual(0, dict1[1]);
+				Assert.AreEqual(5, dict1[2]);
+				Assert.AreEqual(4, dict1[3]);
+				Assert.AreEqual(3, dict1[4]);
+				Assert.AreEqual(2, dict1[5]);
+				Assert.AreEqual(1, dict2[0]);
+				Assert.AreEqual(0, dict2[1]);
+				Assert.AreEqual(5, dict2[2]);
+				Assert.AreEqual(4, dict2[3]);
+				Assert.AreEqual(3, dict2[4]);
+				Assert.AreEqual(2, dict2[5]);
 				var graph2 = VfsTestGraph2();
 				graph2.DeleteEdge(1, 4);
 				graph2.InsertEdge(2, 4);
 				vfs = new VfState(VfsTestGraph1(), graph2);
-				Assert.IsFalse(vfs.FMatch());
+				matches = vfs.Matches().ToArray();
+				Assert.AreEqual(0, matches.Length);
 
 				var graph1 = new Graph();
 				graph1.InsertNodes(11);
@@ -1054,7 +1074,8 @@ namespace vflibcs
 				graph2.InsertEdge(5, 6);
 
 				vfs = new VfState(graph1, graph2, true);
-				Assert.IsTrue(vfs.FMatch());
+				matches = vfs.Matches().ToArray();
+				Assert.AreNotEqual(0, matches.Length);
 			}
 
 			[Test]
@@ -1071,7 +1092,8 @@ namespace vflibcs
 				gr2.InsertEdge(2, 1);
 				gr2.InsertEdge(0, 3);
 				var vfs = new VfState(gr1, gr2);
-				Assert.IsTrue(vfs.FMatch());
+				var matches = vfs.Matches().ToArray();
+				Assert.AreNotEqual(0, matches.Length);
 			}
 
 			[Test]
@@ -1095,12 +1117,14 @@ namespace vflibcs
 				gr2.InsertEdge(0, 1);
 				gr2.InsertEdge(2, 0);
 				var vfs = new VfState(gr1, gr2);
-				Assert.IsTrue(vfs.FMatch());
+				var matches = vfs.Matches().ToArray();
+				Assert.AreNotEqual(0, matches.Length);
 
 				gr1 = VfsTestGraph1();
 				gr2 = VfsTestGraph2();
 				vfs = new VfState(gr1, gr2);
-				Assert.IsTrue(vfs.FMatch());
+				matches = vfs.Matches().ToArray();
+				Assert.AreNotEqual(0, matches.Length);
 				gr1.InsertNode();
 				gr1.InsertEdge(6, 3);
 				gr1.InsertEdge(6, 5);
@@ -1108,15 +1132,18 @@ namespace vflibcs
 				// Graph 2 is isomorphic to a subgraph of graph 1 (default check is for
 				// subgraph isomorphism).
 				vfs = new VfState(gr1, gr2);
-				Assert.IsTrue(vfs.FMatch());
+				matches = vfs.Matches().ToArray();
+				Assert.AreNotEqual(0, matches.Length);
 
 				// The converse is false
 				vfs = new VfState(gr2, gr1);
-				Assert.IsFalse(vfs.FMatch());
+				matches = vfs.Matches().ToArray();
+				Assert.AreNotEqual(0, matches.Length);
 
 				// The two graphs are subgraph ismorphic but not ismorphic
 				vfs = new VfState(gr1, gr2, true /* fIsomorphism */);
-				Assert.IsFalse(vfs.FMatch());
+				matches = vfs.Matches().ToArray();
+				Assert.AreNotEqual(0, matches.Length);
 			}
 
 			[Test]
@@ -1147,7 +1174,8 @@ namespace vflibcs
 				// graph1.InsertEdge(0, cRows * cCols - 1);
 
 				var vfs = new VfState(graph1, graph2, true);
-				Assert.IsTrue(vfs.FMatch());
+				var matches = vfs.Matches().ToArray();
+				Assert.AreNotEqual(0, matches.Length);
 			}
 
 			[Test]
@@ -1164,7 +1192,8 @@ namespace vflibcs
 				graph2.InsertEdge(1, 0);
 
 				var vfs = new VfState(graph1, graph2);
-				Assert.IsTrue(vfs.FMatch());
+				var matches = vfs.Matches().ToArray();
+				Assert.AreNotEqual(0, matches.Length);
 				var arprm1To2 = vfs.Mapping1To2;
 				var arprm2To1 = vfs.Mapping2To1;
 				Assert.AreEqual(1, arprm1To2[2]);
@@ -1218,14 +1247,16 @@ namespace vflibcs
 				graph2.InsertEdge(4, 0);
 
 				var vfs = new VfState<NodeColor>(graph1, graph2, true);
-				Assert.IsTrue(vfs.FMatch());
+				var matches = vfs.Matches().ToArray();
+				Assert.AreNotEqual(0, matches.Length);
 				var mpMatch = vfs.Mapping1To2;
 				// With no context checking, vertex 0 in the first graph can match
 				// vertex 0 in the second graph
 				Assert.AreEqual(0, mpMatch[0]);
 
 				vfs = new VfState<NodeColor>(graph1, graph2, true, true);
-				Assert.IsTrue(vfs.FMatch());
+				matches = vfs.Matches().ToArray();
+				Assert.AreNotEqual(0, matches.Length);
 				mpMatch = vfs.Mapping1To2;
 				// With context checking, Blue in first circular graph has to map to blue
 				// in second circular graph.
@@ -1238,18 +1269,21 @@ namespace vflibcs
 				var rg = new RandomGraph(0.3, 4000 /* seed */);
 				Graph graph1, graph2;
 				VfState vfs;
+				FullMapping[] matches;
 
 				for (var i = 0; i < 10; i++)
 				{
 					rg.IsomorphicPair(100, out graph1, out graph2);
 					vfs = new VfState(graph1, graph2);
-					Assert.IsTrue(vfs.FMatch());
+					matches = vfs.Matches().ToArray();
+					Assert.AreNotEqual(0, matches.Length);
 				}
 
 				graph1 = rg.GetGraph(100);
 				graph2 = rg.GetGraph(100);
 				vfs = new VfState(graph1, graph2);
-				Assert.IsFalse(vfs.FMatch());
+				matches = vfs.Matches().ToArray();
+				Assert.AreNotEqual(0, matches.Length);
 			}
 
 #if BIGSLOWTEST

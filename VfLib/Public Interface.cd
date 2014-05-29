@@ -46,7 +46,6 @@
       <Field Name="_degreeSortedToOriginal1" Hidden="true" />
       <Field Name="_degreeSortedToOriginal2" Hidden="true" />
       <Field Name="_fContextCheck" Hidden="true" />
-      <Field Name="_fFindAll" Hidden="true" />
       <Field Name="_fMatched" Hidden="true" />
       <Field Name="_fSuccessfulMatch" Hidden="true" />
       <Field Name="_inDegreeTotal1" Hidden="true" />
@@ -93,17 +92,10 @@
       <Property Name="Vfgr2" Hidden="true" />
     </Members>
     <TypeIdentifier>
-      <HashCode>YkgHODAGYQiAEAAAYABAACU2QAhAggAASGEIAACRBBA=</HashCode>
+      <HashCode>YlgHOjAEYQiAEAAAYABAACU2QAhAggAASGEIAACRABA=</HashCode>
       <FileName>VfState.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Struct Name="vflibcs.FullMapping">
-    <Position X="6.25" Y="0.5" Width="2" />
-    <TypeIdentifier>
-      <HashCode>AAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
-      <FileName>FullMapping.cs</FileName>
-    </TypeIdentifier>
-  </Struct>
   <Interface Name="vflibcs.IContextCheck">
     <Position X="8.5" Y="0.5" Width="1.5" />
     <TypeIdentifier>
