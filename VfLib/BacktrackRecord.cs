@@ -67,7 +67,7 @@ namespace vflibcs
 
 		internal void MoveToGroup(int iGraph, int inod, Group grpNew, VfState<TAttr> vfs)
 		{
-			var vfg = iGraph == 1 ? vfs.Vfgr1 : vfs.Vfgr2;
+			var vfg = iGraph == 1 ? vfs.VfGraph1 : vfs.VfGraph2;
 			var grpOld = vfg.GetGroup(inod);
 
 			// If node is newly connected to the isomorphism, see if it was connected
@@ -157,21 +157,21 @@ namespace vflibcs
 			var btr = new BacktrackRecord();
 
 			btr.SetMatch(0, 1, vfs);
-			var grp1 = vfs.Vfgr1.GetGroup(0);
-			var grp2 = vfs.Vfgr2.GetGroup(1);
+			var grp1 = vfs.VfGraph1.GetGroup(0);
+			var grp2 = vfs.VfGraph2.GetGroup(1);
 
 			Assert.IsTrue((((int)grp1 & (int)Group.ContainedInMapping)) != 0);
 			Assert.IsTrue((((int)grp2 & (int)Group.ContainedInMapping)) != 0);
-			Assert.AreEqual(Group.ContainedInMapping, vfs.Vfgr1.GetGroup(0));
-			Assert.AreEqual(Group.ContainedInMapping, vfs.Vfgr2.GetGroup(1));
+			Assert.AreEqual(Group.ContainedInMapping, vfs.VfGraph1.GetGroup(0));
+			Assert.AreEqual(Group.ContainedInMapping, vfs.VfGraph2.GetGroup(1));
 			btr.Backtrack(vfs);
-			grp1 = vfs.Vfgr1.GetGroup(0);
-			grp2 = vfs.Vfgr2.GetGroup(1);
+			grp1 = vfs.VfGraph1.GetGroup(0);
+			grp2 = vfs.VfGraph2.GetGroup(1);
 
 			Assert.IsFalse((((int)grp1 & (int)Group.ContainedInMapping)) != 0);
 			Assert.IsFalse((((int)grp2 & (int)Group.ContainedInMapping)) != 0);
-			Assert.AreEqual(Group.Disconnected, vfs.Vfgr1.GetGroup(0));
-			Assert.AreEqual(Group.Disconnected, vfs.Vfgr2.GetGroup(1));
+			Assert.AreEqual(Group.Disconnected, vfs.VfGraph1.GetGroup(0));
+			Assert.AreEqual(Group.Disconnected, vfs.VfGraph2.GetGroup(1));
 		}
 	}
 #endif

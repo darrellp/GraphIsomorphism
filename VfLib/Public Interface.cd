@@ -46,18 +46,10 @@
       <Field Name="_degreeSortedToOriginal1" Hidden="true" />
       <Field Name="_degreeSortedToOriginal2" Hidden="true" />
       <Field Name="_fContextCheck" Hidden="true" />
-      <Field Name="_fMatched" Hidden="true" />
-      <Field Name="_fSuccessfulMatch" Hidden="true" />
       <Field Name="_inDegreeTotal1" Hidden="true" />
       <Field Name="_inDegreeTotal2" Hidden="true" />
-      <Field Name="_isomorphism1To2" Hidden="true" />
-      <Field Name="_isomorphism2To1" Hidden="true" />
-      <Field Name="_isomorphismNid1ToNid2" Hidden="true" />
-      <Field Name="_isomorphismNid2ToNid1" Hidden="true" />
       <Field Name="_ldr1" Hidden="true" />
       <Field Name="_ldr2" Hidden="true" />
-      <Field Name="_lstfm" Hidden="true" />
-      <Field Name="_lstMappings" Hidden="true" />
       <Field Name="_outDegreeTotal1" Hidden="true" />
       <Field Name="_outDegreeTotal2" Hidden="true" />
       <Method Name="AddToInDegree" Hidden="true" />
@@ -70,8 +62,6 @@
       <Method Name="FFeasible" Hidden="true" />
       <Method Name="FInOutNew" Hidden="true" />
       <Method Name="FLocallyIsomorphic" Hidden="true" />
-      <Property Name="FMassagedPermutation" Hidden="true" />
-      <Property Name="FMassagedPermutationList" Hidden="true" />
       <Field Name="FnCompareDegrees" Hidden="true" />
       <Method Name="GetGroupCountInList" Hidden="true" />
       <Property Name="LstDisconnected1" Hidden="true" />
@@ -82,22 +72,18 @@
       <Property Name="LstOut2" Hidden="true" />
       <Method Name="MakeMove" Hidden="true" />
       <Field Name="MapIllegal" Hidden="true" />
-      <Method Name="MassagePermutation" Hidden="true" />
-      <Method Name="MassagePermutationList" Hidden="true" />
-      <Method Name="MassagePermutations" Hidden="true" />
-      <Method Name="RecordCurrentMatch" Hidden="true" />
       <Method Name="RemoveFromMappingList" Hidden="true" />
       <Method Name="SetIsomorphic" Hidden="true" />
       <Property Name="Vfgr1" Hidden="true" />
       <Property Name="Vfgr2" Hidden="true" />
     </Members>
     <TypeIdentifier>
-      <HashCode>YlgHOjAEYQiAEAAAYABAACU2QAhAggAASGEIAACRABA=</HashCode>
+      <HashCode>YFAEMjAEYAgAEAAAQAAAACU2AABAggAASEAAAACRAAA=</HashCode>
       <FileName>VfState.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Interface Name="vflibcs.IContextCheck">
-    <Position X="8.5" Y="0.5" Width="1.5" />
+    <Position X="6.25" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>IContextCheck.cs</FileName>
