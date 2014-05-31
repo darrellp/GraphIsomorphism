@@ -27,7 +27,7 @@ namespace vflibcs
 		#endregion
 
 		#region Constructor
-		internal VfnNode(IGraphLoader<TAttr> loader, int inodGraph, Dictionary<VfeNode, VfeNode> dctEdge, Dictionary<int, int> mpInodGraphInodVf)
+		internal VfnNode(IGraphLoader<TAttr> loader, int inodGraph, Dictionary<VfeNode, VfeNode> dctEdge, List<int> mpInodGraphInodVf)
 		{
 			var nid = loader.IdFromPos(inodGraph);
 			_objAttr = loader.GetNodeAttr(nid);
@@ -94,7 +94,7 @@ namespace vflibcs
 		#endregion
 
 		#region Edge Makers
-		private void MakeEdges(IGraphLoader<TAttr> loader, int nid, Dictionary<VfeNode, VfeNode> dctEdge, Dictionary<int, int> mpInodGraphInodVf)
+		private void MakeEdges(IGraphLoader<TAttr> loader, int nid, Dictionary<VfeNode, VfeNode> dctEdge, List<int> mpInodGraphInodVf)
 		{
 			var inodGraph = loader.PosFromId(nid);
 			var vfeKey = new VfeNode(mpInodGraphInodVf[inodGraph], 0, null);
@@ -103,7 +103,7 @@ namespace vflibcs
 			MakeInEdges(loader, nid, dctEdge, mpInodGraphInodVf, ref vfeKey);
 		}
 
-		private void MakeOutEdges(IGraphLoader<TAttr> loader, int nid, Dictionary<VfeNode, VfeNode> dctEdge, Dictionary<int, int> mpInodGraphInodVf, ref VfeNode vfeKey)
+		private void MakeOutEdges(IGraphLoader<TAttr> loader, int nid, Dictionary<VfeNode, VfeNode> dctEdge, List<int> mpInodGraphInodVf, ref VfeNode vfeKey)
 		{
 			for (var i = 0; i < loader.OutEdgeCount(nid); i++)
 			{
@@ -122,7 +122,7 @@ namespace vflibcs
 			}
 		}
 
-		private void MakeInEdges(IGraphLoader<TAttr> loader, int nid, Dictionary<VfeNode, VfeNode> dctEdge, Dictionary<int, int> mpInodGraphInodVf, ref VfeNode vfeKey)
+		private void MakeInEdges(IGraphLoader<TAttr> loader, int nid, Dictionary<VfeNode, VfeNode> dctEdge, List<int> mpInodGraphInodVf, ref VfeNode vfeKey)
 		{
 			for (var i = 0; i < loader.InEdgeCount(nid); i++)
 			{
@@ -145,7 +145,7 @@ namespace vflibcs
 
 	class VfnNode : VfnNode<Object>
 	{
-		internal VfnNode(IGraphLoader loader, int inodGraph, Dictionary<VfeNode, VfeNode> dctEdge, Dictionary<int, int> mpInodGraphInodVf) :
+		internal VfnNode(IGraphLoader loader, int inodGraph, Dictionary<VfeNode, VfeNode> dctEdge, List<int> mpInodGraphInodVf) :
 			base(loader, inodGraph, dctEdge, mpInodGraphInodVf) {}
 	}
 }

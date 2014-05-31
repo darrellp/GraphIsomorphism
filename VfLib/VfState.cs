@@ -21,8 +21,8 @@ namespace vflibcs
 
 		// Mapping between node positions in VfGraph and the positions in the original Graph.
 		// This is just the permutation to sort the original graph nodes by degrees.
-		private readonly Dictionary<int, int> _degreeSortedToOriginal1;
-		private readonly Dictionary<int, int> _degreeSortedToOriginal2;
+		private readonly List<int> _degreeSortedToOriginal1;
+		private readonly List<int> _degreeSortedToOriginal2;
 
 		// The original ILoader's - needed to map back the permutation
 		// to the original node id's after the match
@@ -345,8 +345,8 @@ namespace vflibcs
 		/// <param name="isomorphismNid2ToNid1">Returned Graph2 nid to Graph1 nid mapping</param>
 		private void VfGraphVfGraphInodeToGraphGraphNid(
 			Dictionary<int, int> isomorphismVfInode1To2,
-			Dictionary<int, int> degreeSortedToOriginal1,
-			Dictionary<int, int> degreeSortedToOriginal2,
+			List<int> degreeSortedToOriginal1,
+			List<int> degreeSortedToOriginal2,
 			out Dictionary<int, int> isomorphismNid1ToNid2,
 			out Dictionary<int, int> isomorphismNid2ToNid1)
 		{

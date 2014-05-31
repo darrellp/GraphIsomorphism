@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 #if NUNIT
 using NUnit.Framework;
 #endif
@@ -65,17 +66,17 @@ namespace vflibcs
 		#endregion
 
 		#region Constructor
-		internal static Dictionary<int, int> ReversePermutation(Dictionary<int, int> perm)
+		internal static List<int> ReversePermutation(List<int> perm)
 		{
-			var ret = new Dictionary<int, int>();
-			foreach ( var i in perm)
+			var ret = new int[perm.Count];
+			for(var i = 0; i < perm.Count; i++)
 			{
-				ret[i.Value] = i.Key;
+				ret[perm[i]] = i;
 			}
-			return ret;
+			return ret.ToList();
 		}
 
-		internal VfGraph(IGraphLoader<TAttr> loader, Dictionary<int, int> mpInodVfInodGraph = null)
+		internal VfGraph(IGraphLoader<TAttr> loader, List<int> mpInodVfInodGraph = null)
 		{
 			if (mpInodVfInodGraph == null)
 			{
@@ -95,7 +96,7 @@ namespace vflibcs
 
 	class VfGraph : VfGraph<Object>
 	{
-		internal VfGraph(IGraphLoader<Object> loader, Dictionary<int, int> mpInodVfInodGraph = null) : base(loader, mpInodVfInodGraph) {}
+		internal VfGraph(IGraphLoader<Object> loader, List<int> mpInodVfInodGraph = null) : base(loader, mpInodVfInodGraph) {}
 	}
 
 	[TestFixture]
