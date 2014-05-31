@@ -2,7 +2,7 @@ using System;
 
 namespace vflibcs
 {
-	internal class VfeNode : IEquatable<VfeNode>
+	internal class VfEdge : IEquatable<VfEdge>
 	{
 		#region Private Variables
 		internal int InodFrom;
@@ -12,7 +12,7 @@ namespace vflibcs
 		#endregion
 
 		#region Constructor
-		internal VfeNode(int inodFrom, int inodTo, object objAttr)
+		internal VfEdge(int inodFrom, int inodTo, object objAttr)
 		{
 			InodFrom = inodFrom;
 			InodTo = inodTo;
@@ -21,11 +21,13 @@ namespace vflibcs
 		#endregion
 
 		#region Hashing
-		public bool Equals(VfeNode other)
+		public bool Equals(VfEdge other)
 		{
 			return (other != null) && (other.InodFrom.Equals(InodFrom) && other.InodTo.Equals(InodTo));
 		}
 
+		// We have to use edges as dictionary keys in VfVertex.MakeInEdges/MakeOutEdges so we give
+		// a nice simple hash function here.
 		public override int GetHashCode()
 		{
 			// ReSharper disable NonReadonlyFieldInGetHashCode

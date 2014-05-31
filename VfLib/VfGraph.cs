@@ -10,7 +10,7 @@ namespace vflibcs
 	class VfGraph<TAttr>
 	{
 		#region Private Variables
-		readonly VfnNode<TAttr>[] _arNodes;
+		readonly VfVertex<TAttr>[] _arNodes;
 		#endregion
 
 		#region Properties
@@ -82,13 +82,13 @@ namespace vflibcs
 			{
 				mpInodVfInodGraph = (new CmpNodeDegrees<TAttr>(loader)).Permutation;
 			}
-			_arNodes = new VfnNode<TAttr>[loader.NodeCount];
+			_arNodes = new VfVertex<TAttr>[loader.NodeCount];
 			var mpInodGraphInodVf = ReversePermutation(mpInodVfInodGraph);
-			var dctEdge = new Dictionary<VfeNode, VfeNode>();
+			var dctEdge = new Dictionary<VfEdge, VfEdge>();
 
 			for (var inodVf = 0; inodVf < loader.NodeCount; inodVf++)
 			{
-				_arNodes[inodVf] = new VfnNode<TAttr>(loader, mpInodVfInodGraph[inodVf], dctEdge, mpInodGraphInodVf);
+				_arNodes[inodVf] = new VfVertex<TAttr>(loader, mpInodVfInodGraph[inodVf], dctEdge, mpInodGraphInodVf);
 			}
 		}
 		#endregion

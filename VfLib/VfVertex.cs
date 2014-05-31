@@ -17,22 +17,22 @@ namespace vflibcs
 		Disconnected = 8			// Outside the mapping with no links to mapped nodes
 	}
 
-	class VfnNode<TAttr>
+	class VfVertex<TAttr>
 	{
 		#region Private Variables
-		readonly VfeNode[] _arvfeEdgeOut;
-		readonly VfeNode[] _arvfeEdgeIn;
-		readonly object _objAttr;
+		readonly VfEdge[] _outEdges;
+		readonly VfEdge[] _inEdges;
+		readonly object _attribute;
 		Group _grps = Group.Disconnected;
 		#endregion
 
 		#region Constructor
-		internal VfnNode(IGraphLoader<TAttr> loader, int inodGraph, Dictionary<VfeNode, VfeNode> dctEdge, List<int> mpInodGraphInodVf)
+		internal VfVertex(IGraphLoader<TAttr> loader, int inodGraph, Dictionary<VfEdge, VfEdge> dctEdge, List<int> mpInodGraphInodVf)
 		{
 			var nid = loader.IdFromPos(inodGraph);
-			_objAttr = loader.GetNodeAttr(nid);
-			_arvfeEdgeOut = new VfeNode[loader.OutEdgeCount(nid)];
-			_arvfeEdgeIn = new VfeNode[loader.InEdgeCount(nid)];
+			_attribute = loader.GetNodeAttr(nid);
+			_outEdges = new VfEdge[loader.OutEdgeCount(nid)];
+			_inEdges = new VfEdge[loader.InEdgeCount(nid)];
 			MakeEdges(loader, nid, dctEdge, mpInodGraphInodVf);
 		}
 		#endregion
@@ -50,7 +50,7 @@ namespace vflibcs
 		{
 			get
 			{
-				return _objAttr;
+				return _attribute;
 			}
 		}
 
@@ -58,7 +58,7 @@ namespace vflibcs
 		{
 			get
 			{
-				return _arvfeEdgeIn.Length;
+				return _inEdges.Length;
 			}
 		}
 
@@ -66,7 +66,7 @@ namespace vflibcs
 		{
 			get
 			{
-				return _arvfeEdgeOut.Length;
+				return _outEdges.Length;
 			}
 		}
 
@@ -74,16 +74,14 @@ namespace vflibcs
 		{
 			get
 			{
-				//var lstOut = new List<int>(_arvfeEdgeOut.Length);
-				//lstOut.AddRange(_arvfeEdgeOut.Select(vfe => vfe.InodTo));
-				return _arvfeEdgeOut.Select(vfe => vfe.InodTo).ToList();
+				return _outEdges.Select(vfe => vfe.InodTo).ToList();
 			}
 		}
 		internal List<int> InNeighbors
 		{
 			get
 			{
-				return _arvfeEdgeIn.Select(vfe => vfe.InodFrom).ToList();
+				return _inEdges.Select(vfe => vfe.InodFrom).ToList();
 			}
 		}
 
@@ -94,16 +92,21 @@ namespace vflibcs
 		#endregion
 
 		#region Edge Makers
-		private void MakeEdges(IGraphLoader<TAttr> loader, int nid, Dictionary<VfeNode, VfeNode> dctEdge, List<int> mpInodGraphInodVf)
+		private void MakeEdges(IGraphLoader<TAttr> loader, int nid, Dictionary<VfEdge, VfEdge> dctEdge, List<int> mpInodGraphInodVf)
 		{
 			var inodGraph = loader.PosFromId(nid);
-			var vfeKey = new VfeNode(mpInodGraphInodVf[inodGraph], 0, null);
+			var vfeKey = new VfEdge(mpInodGraphInodVf[inodGraph], 0, null);
 
 			MakeOutEdges(loader, nid, dctEdge, mpInodGraphInodVf, ref vfeKey);
 			MakeInEdges(loader, nid, dctEdge, mpInodGraphInodVf, ref vfeKey);
 		}
 
-		private void MakeOutEdges(IGraphLoader<TAttr> loader, int nid, Dictionary<VfeNode, VfeNode> dctEdge, List<int> mpInodGraphInodVf, ref VfeNode vfeKey)
+		// Since we make edges both for incoming edges and outgoing edges every edge actually gets visited twice - once for it's incoming vertex
+		// and once for it's outgoing vertex.  The first time we actually create the edge and the second time we need to reference the edge
+		// created the first time.  dctEdge keeps track of previously created edges so we can find them on the second visit.  It has to be
+		// be maintained during the entire construction of the graph so it's created in the graph constructor and passed down a rather large
+		// call chain to be used here.
+		private void MakeOutEdges(IGraphLoader<TAttr> loader, int nid, Dictionary<VfEdge, VfEdge> dctEdge, List<int> mpInodGraphInodVf, ref VfEdge vfeKey)
 		{
 			for (var i = 0; i < loader.OutEdgeCount(nid); i++)
 			{
@@ -112,17 +115,17 @@ namespace vflibcs
 
 				if (!dctEdge.ContainsKey(vfeKey))
 				{
-					_arvfeEdgeOut[i] = dctEdge[vfeKey] = new VfeNode(vfeKey.InodFrom, vfeKey.InodTo, attr);
-					vfeKey = new VfeNode(vfeKey.InodFrom, vfeKey.InodTo, null);
+					_outEdges[i] = dctEdge[vfeKey] = new VfEdge(vfeKey.InodFrom, vfeKey.InodTo, attr);
+					vfeKey = new VfEdge(vfeKey.InodFrom, vfeKey.InodTo, null);
 				}
 				else
 				{
-					_arvfeEdgeOut[i] = dctEdge[vfeKey];
+					_outEdges[i] = dctEdge[vfeKey];
 				}
 			}
 		}
 
-		private void MakeInEdges(IGraphLoader<TAttr> loader, int nid, Dictionary<VfeNode, VfeNode> dctEdge, List<int> mpInodGraphInodVf, ref VfeNode vfeKey)
+		private void MakeInEdges(IGraphLoader<TAttr> loader, int nid, Dictionary<VfEdge, VfEdge> dctEdge, List<int> mpInodGraphInodVf, ref VfEdge vfeKey)
 		{
 			for (var i = 0; i < loader.InEdgeCount(nid); i++)
 			{
@@ -131,21 +134,21 @@ namespace vflibcs
 
 				if (!dctEdge.ContainsKey(vfeKey))
 				{
-					_arvfeEdgeIn[i] = dctEdge[vfeKey] = new VfeNode(vfeKey.InodFrom, vfeKey.InodTo, attr);
-					vfeKey = new VfeNode(vfeKey.InodFrom, vfeKey.InodTo, null);
+					_inEdges[i] = dctEdge[vfeKey] = new VfEdge(vfeKey.InodFrom, vfeKey.InodTo, attr);
+					vfeKey = new VfEdge(vfeKey.InodFrom, vfeKey.InodTo, null);
 				}
 				else
 				{
-					_arvfeEdgeIn[i] = dctEdge[vfeKey];
+					_inEdges[i] = dctEdge[vfeKey];
 				}
 			}
 		}
 		#endregion
 	}
 
-	class VfnNode : VfnNode<Object>
+	class VfVertex : VfVertex<Object>
 	{
-		internal VfnNode(IGraphLoader loader, int inodGraph, Dictionary<VfeNode, VfeNode> dctEdge, List<int> mpInodGraphInodVf) :
+		internal VfVertex(IGraphLoader loader, int inodGraph, Dictionary<VfEdge, VfEdge> dctEdge, List<int> mpInodGraphInodVf) :
 			base(loader, inodGraph, dctEdge, mpInodGraphInodVf) {}
 	}
 }

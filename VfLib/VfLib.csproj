@@ -74,10 +74,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RandomGraph.cs" />
     <Compile Include="SortedListNoValue.cs" />
-    <Compile Include="VfeNode.cs" />
+    <Compile Include="VfEdge.cs" />
     <Compile Include="VfException.cs" />
     <Compile Include="VfGraph.cs" />
-    <Compile Include="VfnNode.cs" />
+    <Compile Include="VfVertex.cs" />
     <Compile Include="VfState.cs" />
   </ItemGroup>
   <ItemGroup>
