@@ -10,7 +10,6 @@ namespace vflibcs
 	public class Graph<TAttr> : IGraphLoader<TAttr> where TAttr : class
 	{
 		#region Private variables
-		// TODO: Is this necessary to be a sorted list?
 		internal readonly SortedList<int, NNode> Nodes = new SortedList<int, NNode>(); // Sorted by node id's
 		internal const int NidIllegal = -1;
 		#endregion
