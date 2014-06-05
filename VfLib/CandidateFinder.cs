@@ -143,6 +143,7 @@ namespace vflibcs
 		internal CandidateFinder(VfState vfs) : base(vfs) {}
 	}
 
+#if NUNIT
 	public class CFTests
 	{
 		public class VfGraphTester
@@ -196,4 +197,5 @@ namespace vflibcs
 			}
 		}
 	}
+#endif
 }

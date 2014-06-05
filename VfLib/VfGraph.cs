@@ -98,12 +98,11 @@ namespace vflibcs
 	{
 		internal VfGraph(IGraphLoader<Object> loader, List<int> mpInodVfInodGraph = null) : base(loader, mpInodVfInodGraph) {}
 	}
-
+#if NUNIT
 	[TestFixture]
 	public class VfGraphTester
 	{
 		#region NUNIT Testing
-#if NUNIT
 		VfGraph SetupGraph()
 		{
 			var graph = new Graph();
@@ -138,7 +137,7 @@ namespace vflibcs
 		{
 			Assert.AreEqual(4, SetupGraph().NodeCount);
 		}
-#endif
 		#endregion
 	}
+#endif
 }

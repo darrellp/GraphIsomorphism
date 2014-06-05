@@ -238,6 +238,7 @@ namespace vflibcs
 
 	public class Graph : Graph<Object> { }
 
+#if NUNIT
 	[TestFixture]
 	public class GraphTester
 	{
@@ -353,4 +354,5 @@ namespace vflibcs
 			Assert.AreEqual(count * (count - 1) / 2, iTotal);
 		}
 	}
+#endif
 }
