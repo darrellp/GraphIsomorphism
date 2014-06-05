@@ -15,7 +15,7 @@ namespace vflibcs
 	/// There are only two actions taken in the course of a backtrack record -
 	/// matching nodes and reclassifying nodes into different groups.
 	/// </remarks>
-	class BacktrackRecord<TAttr>
+	class BacktrackRecord<TVAttr, TEAttr>
 	{
 		#region Private Variables
 		// List of actions to be undone on backtrack
@@ -36,7 +36,7 @@ namespace vflibcs
 		/// <param name="inod1">Node index in the first graph</param>
 		/// <param name="inod2">Node index in the second graph</param>
 		/// <param name="vfs">State determining the isomorphism</param>
-		internal void SetMatch(int inod1, int inod2, VfState<TAttr> vfs)
+		internal void SetMatch(int inod1, int inod2, VfState<TVAttr, TEAttr> vfs)
 		{
 			// Add both nodes to the "In Mapping" group
 			MoveToGroup(1, inod1, Group.ContainedInMapping, vfs);
@@ -65,7 +65,7 @@ namespace vflibcs
 		/// <param name="grpNew">New group to potentially move node to</param>
 		/// <param name="vfs">State determining the isomorphism</param>
 
-		internal void MoveToGroup(int iGraph, int inod, Group grpNew, VfState<TAttr> vfs)
+		internal void MoveToGroup(int iGraph, int inod, Group grpNew, VfState<TVAttr, TEAttr> vfs)
 		{
 			var vfg = iGraph == 1 ? vfs.VfGraph1 : vfs.VfGraph2;
 			var grpOld = vfg.GetGroup(inod);
@@ -93,7 +93,7 @@ namespace vflibcs
 		/// Undo the actions taken for this backtrack record
 		/// </summary>
 		/// <param name="vfs">State to undo the actions in</param>
-		internal void Backtrack(VfState<TAttr> vfs)
+		internal void Backtrack(VfState<TVAttr, TEAttr> vfs)
 		{
 			_lstActions.ForEach(action => action.Backtrack(vfs));
 		}
@@ -101,13 +101,13 @@ namespace vflibcs
 
 	}
 
-	class BacktrackRecord : BacktrackRecord<Object> {}
+	class BacktrackRecord : BacktrackRecord<Object, Object> {}
 	#region NUNIT Testing
 #if NUNIT
 	[TestFixture]
 	public class BacktrackRecordTester
 	{
-		VfState<Object> VfsTest()
+		VfState<Object, Object> VfsTest()
 		{
 			var graph1 = new Graph();
 			Assert.AreEqual(0, graph1.InsertNode());
@@ -141,13 +141,13 @@ namespace vflibcs
 			graph2.InsertEdge(0, 5);
 			graph2.InsertEdge(4, 1);
 
-			return new VfState<Object>(graph1, graph2);
+			return new VfState<Object, Object>(graph1, graph2);
 		}
 
 		[Test]
 		public void TestConstructor()
 		{
-			Assert.IsNotNull(new BacktrackRecord<Object>());
+			Assert.IsNotNull(new BacktrackRecord<Object, Object>());
 		}
 
 		[Test]

@@ -4,14 +4,14 @@ using System.Linq;
 
 namespace vflibcs
 {
-	class CmpNodeDegrees<TAttr> : IComparer<int>
+	class CmpNodeDegrees<TVAttr, TEAttr> : IComparer<int>
 	{
 		#region Private Variables
-		readonly IGraphLoader<TAttr> _loader;
+		readonly IGraphLoader<TVAttr, TEAttr> _loader;
 		#endregion
 
 		#region Constructor
-		internal CmpNodeDegrees(IGraphLoader<TAttr> loader)
+		internal CmpNodeDegrees(IGraphLoader<TVAttr, TEAttr> loader)
 		{
 			_loader = loader;
 		}

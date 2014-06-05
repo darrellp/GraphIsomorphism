@@ -14,7 +14,7 @@ namespace vflibcs
 {
 	// Struct representing a full isomorphism mapping
 
-	public class VfState<TAttr>
+	public class VfState<TVAttr, TEAttr>
 	{
 		#region Private Variables
 		internal const int MapIllegal = -1;
@@ -26,8 +26,8 @@ namespace vflibcs
 
 		// The original ILoader's - needed to map back the permutation
 		// to the original node id's after the match
-		private readonly IGraphLoader<TAttr> _ldr1;
-		private readonly IGraphLoader<TAttr> _ldr2;
+		private readonly IGraphLoader<TVAttr, TEAttr> _ldr1;
+		private readonly IGraphLoader<TVAttr, TEAttr> _ldr2;
 
 		// The actual mappings we're building up.  Note that in our VfGraph the ordering of nodes is based
 		// on decreasing total degree so it's not generally the same as in the original graph.  The
@@ -45,8 +45,8 @@ namespace vflibcs
 
 		#region Properties
 		// The two graphs we're comparing
-		internal VfGraph<TAttr> VfGraph2 { get; set; }
-		internal VfGraph<TAttr> VfGraph1 { get; set; }
+		internal VfGraph<TVAttr, TEAttr> VfGraph2 { get; set; }
+		internal VfGraph<TVAttr, TEAttr> VfGraph1 { get; set; }
 
 		// Lists of nodes not yet participating in the current isomorphism
 		// These lists are sorted on index but since the original nodes were
@@ -88,7 +88,11 @@ namespace vflibcs
 		#endregion
 
 		#region Constructors
-		public VfState(IGraphLoader<TAttr> loader1, IGraphLoader<TAttr> loader2, bool fIsomorphism = false, bool fContextCheck = false)
+		public VfState(
+			IGraphLoader<TVAttr, TEAttr> loader1,
+			IGraphLoader<TVAttr, TEAttr> loader2,
+			bool fIsomorphism = false,
+			bool fContextCheck = false)
 		{
 			LstIn1 = new SortedListNoValue<int>();
 			LstOut1 = new SortedListNoValue<int>();
@@ -114,10 +118,10 @@ namespace vflibcs
 			}
 
 			// Node indices in VfGraphs are sorted by vertex degree
-			_degreeSortedToOriginal1 = new CmpNodeDegrees<TAttr>(loader1).Permutation;
-			_degreeSortedToOriginal2 = new CmpNodeDegrees<TAttr>(loader2).Permutation;
-			VfGraph1 = new VfGraph<TAttr>(loader1, _degreeSortedToOriginal1);
-			VfGraph2 = new VfGraph<TAttr>(loader2, _degreeSortedToOriginal2);
+			_degreeSortedToOriginal1 = new CmpNodeDegrees<TVAttr, TEAttr>(loader1).Permutation;
+			_degreeSortedToOriginal2 = new CmpNodeDegrees<TVAttr, TEAttr>(loader2).Permutation;
+			VfGraph1 = new VfGraph<TVAttr, TEAttr>(loader1, _degreeSortedToOriginal1);
+			VfGraph2 = new VfGraph<TVAttr, TEAttr>(loader2, _degreeSortedToOriginal2);
 
 			// Set up space for isomorphism mappings
 			_vfGraphInode1To2Isomorphism = new Dictionary<int, int>(loader1.NodeCount);
@@ -195,8 +199,8 @@ namespace vflibcs
 				yield break;
 			}
 
-			var stkcf = new Stack<CandidateFinder<TAttr>>();
-			var stkbr = new Stack<BacktrackRecord<TAttr>>();
+			var stkcf = new Stack<CandidateFinder<TVAttr, TEAttr>>();
+			var stkbr = new Stack<BacktrackRecord<TVAttr, TEAttr>>();
 
 			var fBacktrack = false;
 #if GATHERSTATS
@@ -224,8 +228,8 @@ namespace vflibcs
 			//					
 			while (true)
 			{
-				CandidateFinder<TAttr> cf;
-				BacktrackRecord<TAttr> btr;
+				CandidateFinder<TVAttr, TEAttr> cf;
+				BacktrackRecord<TVAttr, TEAttr> btr;
 
 				// If it's time to backtrack...
 				if (fBacktrack)
@@ -258,11 +262,11 @@ namespace vflibcs
 					// graph1 node can be matched to the selected graph2 node.  At that point we
 					// will pop the candidate finder, backtrack any changes we've made and move to
 					// the next graph1 candidate in the previous candidate finder on the stack.
-					cf = new CandidateFinder<TAttr>(this);
+					cf = new CandidateFinder<TVAttr, TEAttr>(this);
 
 					// Start a new backtracking record in case we fail to find a match for our
 					// selected graph2 node.
-					btr = new BacktrackRecord<TAttr>();
+					btr = new BacktrackRecord<TVAttr, TEAttr>();
 				}
 
 				// Assume failure
@@ -398,7 +402,7 @@ namespace vflibcs
 		/// <param name="vfgr">Graph which contains the vertex</param>
 		/// <param name="grp">Classification to check for</param>
 		/// <returns>Count of vertices in list which are classified properly</returns>
-		private int GetGroupCountInList(IEnumerable<int> lstOfNodeIndices, VfGraph<TAttr> vfgr, Group grp)
+		private int GetGroupCountInList(IEnumerable<int> lstOfNodeIndices, VfGraph<TVAttr, TEAttr> vfgr, Group grp)
 		{
 			return lstOfNodeIndices.Count(inod => ((int) vfgr.GetGroup(inod) & (int) grp) != 0);
 		}
@@ -577,7 +581,7 @@ namespace vflibcs
 		/// <param name="mtc">Proposed match</param>
 		/// <param name="btr">BacktrackRecord to record actions into</param>
 		/// <returns>True if match is locally consistent with a full isomorphism</returns>
-		private bool FAddMatchToSolution(Match mtc, BacktrackRecord<TAttr> btr)
+		private bool FAddMatchToSolution(Match mtc, BacktrackRecord<TVAttr, TEAttr> btr)
 		{
 			var inod1 = mtc.Inod1;
 			var inod2 = mtc.Inod2;
@@ -669,7 +673,7 @@ namespace vflibcs
 		{
 			// Moves to the mapping are handled by the mapping arrays and aren't handled here.
 
-			VfGraph<TAttr> vfg;
+			VfGraph<TVAttr, TEAttr> vfg;
 			SortedListNoValue<int> disconnectedList, outList, inList;
 
 			if (iGraph == 1)
@@ -745,9 +749,9 @@ namespace vflibcs
 		#endregion
 	}
 
-	public class VfState : VfState<Object>
+	public class VfState : VfState<Object, Object>
 	{
-		public VfState(IGraphLoader<Object> loader1, IGraphLoader<Object> loader2, bool fIsomorphism = false, bool fContextCheck = false) :
+		public VfState(IGraphLoader<Object, Object> loader1, IGraphLoader<Object, Object> loader2, bool fIsomorphism = false, bool fContextCheck = false) :
 			base(loader1, loader2, fIsomorphism, fContextCheck) {}
 	}
 
@@ -1076,8 +1080,8 @@ namespace vflibcs
 			[Test]
 			public void TestContextCheck()
 			{
-				var graph1 = new Graph<NodeColor>();
-				var graph2 = new Graph<NodeColor>();
+				var graph1 = new Graph<NodeColor, Object>();
+				var graph2 = new Graph<NodeColor, Object>();
 
 				graph1.InsertNode(new NodeColor("Blue"));
 				graph1.InsertNode(new NodeColor("Red"));
@@ -1101,7 +1105,7 @@ namespace vflibcs
 				graph2.InsertEdge(3, 4);
 				graph2.InsertEdge(4, 0);
 
-				var vfs = new VfState<NodeColor>(graph1, graph2, true);
+				var vfs = new VfState<NodeColor, Object>(graph1, graph2, true);
 				var matches = vfs.Matches().ToArray();
 				Assert.AreNotEqual(0, matches.Length);
 				var mpMatch = matches[0].IsomorphismNid1ToNid2;
@@ -1109,7 +1113,7 @@ namespace vflibcs
 				// vertex 0 in the second graph
 				Assert.AreEqual(0, mpMatch[0]);
 
-				vfs = new VfState<NodeColor>(graph1, graph2, true, true);
+				vfs = new VfState<NodeColor, Object>(graph1, graph2, true, true);
 				matches = vfs.Matches().ToArray();
 				Assert.AreNotEqual(0, matches.Length);
 				mpMatch = matches[0].IsomorphismNid1ToNid2;

@@ -7,10 +7,10 @@ using NUnit.Framework;
 
 namespace vflibcs
 {
-	class VfGraph<TAttr>
+	class VfGraph<TVAttr, TEAttr>
 	{
 		#region Private Variables
-		readonly VfVertex<TAttr>[] _arNodes;
+		readonly VfVertex<TVAttr, TEAttr>[] _arNodes;
 		#endregion
 
 		#region Properties
@@ -76,27 +76,27 @@ namespace vflibcs
 			return ret.ToList();
 		}
 
-		internal VfGraph(IGraphLoader<TAttr> loader, List<int> mpInodVfInodGraph = null)
+		internal VfGraph(IGraphLoader<TVAttr, TEAttr> loader, List<int> mpInodVfInodGraph = null)
 		{
 			if (mpInodVfInodGraph == null)
 			{
-				mpInodVfInodGraph = (new CmpNodeDegrees<TAttr>(loader)).Permutation;
+				mpInodVfInodGraph = (new CmpNodeDegrees<TVAttr, TEAttr>(loader)).Permutation;
 			}
-			_arNodes = new VfVertex<TAttr>[loader.NodeCount];
+			_arNodes = new VfVertex<TVAttr, TEAttr>[loader.NodeCount];
 			var mpInodGraphInodVf = ReversePermutation(mpInodVfInodGraph);
 			var dctEdge = new Dictionary<VfEdge, VfEdge>();
 
 			for (var inodVf = 0; inodVf < loader.NodeCount; inodVf++)
 			{
-				_arNodes[inodVf] = new VfVertex<TAttr>(loader, mpInodVfInodGraph[inodVf], dctEdge, mpInodGraphInodVf);
+				_arNodes[inodVf] = new VfVertex<TVAttr, TEAttr>(loader, mpInodVfInodGraph[inodVf], dctEdge, mpInodGraphInodVf);
 			}
 		}
 		#endregion
 	}
 
-	class VfGraph : VfGraph<Object>
+	class VfGraph : VfGraph<Object, Object>
 	{
-		internal VfGraph(IGraphLoader<Object> loader, List<int> mpInodVfInodGraph = null) : base(loader, mpInodVfInodGraph) {}
+		internal VfGraph(IGraphLoader<Object, Object> loader, List<int> mpInodVfInodGraph = null) : base(loader, mpInodVfInodGraph) {}
 	}
 #if NUNIT
 	[TestFixture]

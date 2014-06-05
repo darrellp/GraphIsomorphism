@@ -5,11 +5,11 @@ using NUnit.Framework;
 
 namespace vflibcs
 {
-	class CandidateFinder<TAttr>
+	class CandidateFinder<TVAttr, TEAttr>
 	{
 		#region Private variables
-		// State we're finding candidate matches for
-		readonly VfState<TAttr> _vfs;
+		// State we're finding candfidate matches for
+		readonly VfState<TVAttr, TEAttr> _vfs;
 
 		// List of graph1 candidates for the current graph2 candidate
 		readonly int[] _graph1Candidates;
@@ -60,7 +60,7 @@ namespace vflibcs
 		/// in lists and finally for the nodes disconnected from the current isomorphism.
 		/// </remarks>
 		/// <param name="vfs">State to grab nodes from</param>
-		internal CandidateFinder(VfState<TAttr> vfs)
+		internal CandidateFinder(VfState<TVAttr, TEAttr> vfs)
 		{
 			_vfs = vfs;
 
@@ -138,7 +138,7 @@ namespace vflibcs
 		#endregion
 	}
 
-	class CandidateFinder : CandidateFinder<Object>
+	class CandidateFinder : CandidateFinder<Object, Object>
 	{
 		internal CandidateFinder(VfState vfs) : base(vfs) {}
 	}

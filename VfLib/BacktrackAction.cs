@@ -33,7 +33,7 @@ namespace vflibcs
 		#endregion
 
 		#region Backtracking
-		internal void Backtrack<TAttr>(VfState<TAttr> vfs)
+		internal void Backtrack<TVAttr, TEAttr>(VfState<TVAttr, TEAttr> vfs)
 		{
 			switch (_act)
 			{

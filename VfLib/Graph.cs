@@ -7,7 +7,9 @@ using NUnit.Framework;
 
 namespace vflibcs
 {
-	public class Graph<TAttr> : IGraphLoader<TAttr> where TAttr : class
+	public class Graph<TVAttr, TEAttr> : IGraphLoader<TVAttr, TEAttr>
+		where TVAttr : class
+		where TEAttr : class
 	{
 		#region Private variables
 		internal readonly SortedList<int, NNode> Nodes = new SortedList<int, NNode>(); // Sorted by node id's
@@ -17,14 +19,14 @@ namespace vflibcs
 		#region Private structs
 		internal class ENode
 		{
-			public TAttr Attr;
+			public TEAttr Attr;
 			public int IDFrom = NidIllegal;
 			public int IDTo = NidIllegal;
 		}
 
 		internal class NNode
 		{
-			public TAttr Attr;
+			public TVAttr Attr;
 			public readonly SortedList<int, ENode> EdgesFrom = new SortedList<int, ENode>(); // Key is named id of "to" node
 			public readonly List<ENode> EdgesTo = new List<ENode>();
 			public int ID = NidIllegal;
@@ -119,7 +121,7 @@ namespace vflibcs
 			return Nodes.IndexOfKey(nid);
 		}
 
-		public TAttr GetNodeAttr(int id)
+		public TVAttr GetNodeAttr(int id)
 		{
 			return FindNode(id).Attr;
 		}
@@ -134,7 +136,7 @@ namespace vflibcs
 			return FindNode(id).EdgesFrom.Count;
 		}
 
-		public int GetInEdge(int idTo, int pos, out TAttr attr)
+		public int GetInEdge(int idTo, int pos, out TEAttr attr)
 		{
 			ENode end = null;
 			try
@@ -151,7 +153,7 @@ namespace vflibcs
 			return end.IDFrom;
 		}
 
-		public int GetOutEdge(int idFrom, int pos, out TAttr attr)
+		public int GetOutEdge(int idFrom, int pos, out TEAttr attr)
 		{
 			ENode end = null;
 			try
@@ -170,7 +172,7 @@ namespace vflibcs
 		#endregion
 
 		#region Insertion/Deletion
-		public int InsertNode(TAttr attr = null)
+		public int InsertNode(TVAttr attr = null)
 		{
 			var nod = new NNode {ID = Nodes.Count, Attr = attr};
 			Nodes.Add(nod.ID, nod);
@@ -178,19 +180,19 @@ namespace vflibcs
 		}
 
 		// ReSharper disable once UnusedMethodReturnValue.Global
-		public int InsertNodes(int cnod, TAttr attr = null)
+		public int InsertNodes(int cnod, TVAttr vattr = null)
 		{
-			var nid = InsertNode(attr);
+			var nid = InsertNode(vattr);
 
 			for (var i = 0; i < cnod - 1; i++)
 			{
-				InsertNode(attr);
+				InsertNode(vattr);
 			}
 
 			return nid;
 		}
 
-		public void InsertEdge(int nidFrom, int nidTo, TAttr attr = null)
+		public void InsertEdge(int nidFrom, int nidTo, TEAttr attr = null)
 		{
 			var end = new ENode();
 			var nodFrom = FindNode(nidFrom);
@@ -236,7 +238,7 @@ namespace vflibcs
 		#endregion
 	}
 
-	public class Graph : Graph<Object> { }
+	public class Graph : Graph<Object, Object> { }
 
 #if NUNIT
 	[TestFixture]
