@@ -2,25 +2,25 @@ using System;
 
 namespace vflibcs
 {
-	public interface IGraphLoader<VType, EType>
+	public interface IGraphLoader<TV, TE>
 	{
-		// When nodes/edges are inserted, they are given ID's that they keep through their life.
+		// When vertices/edges are inserted, they are given ID's that they keep through their life.
 		// They are entered in a list and the indices in the list may not correspond to the
-		// id's.  For instance, if 3 nodes are entered they have id's 0, 1, 2 and their IDs
-		// correspond to their indices.  However if node 0 is deleted then we have the nodes
+		// id's.  For instance, if 3 vertices are entered they have id's 0, 1, 2 and their IDs
+		// correspond to their indices.  However if vertex 0 is deleted then we have the vertices
 		// 1 and 2 in positions 0 and 1 so their id's don't correspond to their indices.
 		//
-		// These two types of identifiers are identified as nid for their id and inod for their
-		// index in a list.  There is a way to swap back and forth for vertex nodes with IdFromPos
-		// and PosFromId.  The edges are always identified by inod's.
-		int NodeCount { get; }
-		int IdFromPos(int inod);
-		VType GetNodeAttr(int nid);
-		int OutEdgeCount(int nid);
-		int GetOutEdge(int nid, int inodEdge, out EType attr);
+		// These two types of identifiers are identified as vid for their id and ivtx for their
+		// index in a list.  There is a way to swap back and forth for vertex vertices with IdFromPos
+		// and PosFromId.  The edges are always identified by ivtx's.
+		int VertexCount { get; }
+		int IdFromPos(int ivtx);
+		TV GetVertexAttr(int vid);
+		int OutEdgeCount(int vid);
+		int GetOutEdge(int vid, int ivtxEdge, out TE attr);
 		int InEdgeCount(int cEdge);
-		int GetInEdge(int nid, int inodEdge, out EType attr);
-		int PosFromId(int nid);
+		int GetInEdge(int vid, int ivtxEdge, out TE attr);
+		int PosFromId(int vid);
 	}
 
 	public interface IGraphLoader : IGraphLoader<Object, Object> {}

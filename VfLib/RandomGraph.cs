@@ -44,7 +44,7 @@ namespace vflibcs
 			var setEdges = new HashSet<EdgeKey>();
 			var graph = new Graph();
 
-			graph.InsertNodes(cnod);
+			graph.InsertVertices(cnod);
 
 			while (cEdgesSoFar < cEdgesNeeded)
 			{
@@ -87,7 +87,7 @@ namespace vflibcs
 
 				var graph = rg.GetGraph(30);
 				Assert.IsNotNull(graph);
-				Assert.AreEqual(30, graph.NodeCount);
+				Assert.AreEqual(30, graph.VertexCount);
 			}
 		}
 #endif

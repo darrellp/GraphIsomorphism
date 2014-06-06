@@ -18,16 +18,16 @@ namespace vflibcs
 		#region Private Variables
 		readonly Action _act;			// Type of action
 		readonly int _iGraph;			// Which graph was affected
-		readonly int _inod;				// Node affected
+		readonly int _ivtx;				// Vertex affected
 		readonly Group _grpRestore;		// Group to move back to if GroupMove action
 		#endregion
 
 		#region Constructor
-		internal BacktrackAction(Action act, int iGraph, int inod, Group grpRestore = 0)
+		internal BacktrackAction(Action act, int iGraph, int ivtx, Group grpRestore = 0)
 		{
 			_act = act;
 			_iGraph = iGraph;
-			_inod = inod;
+			_ivtx = ivtx;
 			_grpRestore = grpRestore;
 		}
 		#endregion
@@ -39,12 +39,12 @@ namespace vflibcs
 			{
 				case Action.DeleteMatch:
 					// Undo a matching
-					vfs.RemoveFromMappingList(_iGraph, _inod);
+					vfs.RemoveFromMappingList(_iGraph, _ivtx);
 					break;
 
 				case Action.GroupMove:
 					// Move back to previous group
-					vfs.MakeMove(_iGraph, _inod, _grpRestore);
+					vfs.MakeMove(_iGraph, _ivtx, _grpRestore);
 					break;
 			}
 		}

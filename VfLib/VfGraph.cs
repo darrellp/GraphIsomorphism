@@ -14,7 +14,7 @@ namespace vflibcs
 		#endregion
 
 		#region Properties
-		internal int NodeCount
+		internal int VertexCount
 		{
 			get
 			{
@@ -24,44 +24,44 @@ namespace vflibcs
 		#endregion
 
 		#region Accessors
-		internal int OutDegree(int inod)
+		internal int OutDegree(int ivtx)
 		{
-			return _arNodes[inod].OutDegree;
+			return _arNodes[ivtx].OutDegree;
 		}
 
-		internal int InDegree(int inod)
+		internal int InDegree(int ivtx)
 		{
-			return _arNodes[inod].InDegree;
+			return _arNodes[ivtx].InDegree;
 		}
 
-		internal int TotalDegree(int inod)
+		internal int TotalDegree(int ivtx)
 		{
-			return OutDegree(inod) + InDegree(inod);
+			return OutDegree(ivtx) + InDegree(ivtx);
 		}
 
-		internal List<int> OutNeighbors(int inod)
+		internal List<int> OutNeighbors(int ivtx)
 		{
-			return _arNodes[inod].OutNeighbors;
+			return _arNodes[ivtx].OutNeighbors;
 		}
 
-		internal List<int> InNeighbors(int inod)
+		internal List<int> InNeighbors(int ivtx)
 		{
-			return _arNodes[inod].InNeighbors;
+			return _arNodes[ivtx].InNeighbors;
 		}
 
-		internal Group GetGroup(int inod)
+		internal Group GetGroup(int ivtx)
 		{
-			return _arNodes[inod].Grps;
+			return _arNodes[ivtx].Grps;
 		}
 
-		internal void SetGroup(int inod, Group grps)
+		internal void SetGroup(int ivtx, Group grps)
 		{
-			_arNodes[inod].Grps = grps;
+			_arNodes[ivtx].Grps = grps;
 		}
 
-		internal object GetAttr(int inod)
+		internal object GetAttr(int ivtx)
 		{
-			return _arNodes[inod].Attr;
+			return _arNodes[ivtx].Attr;
 		}
 		#endregion
 
@@ -76,19 +76,19 @@ namespace vflibcs
 			return ret.ToList();
 		}
 
-		internal VfGraph(IGraphLoader<TVAttr, TEAttr> loader, List<int> mpInodVfInodGraph = null)
+		internal VfGraph(IGraphLoader<TVAttr, TEAttr> loader, List<int> mpIvtxVfIvtxGraph = null)
 		{
-			if (mpInodVfInodGraph == null)
+			if (mpIvtxVfIvtxGraph == null)
 			{
-				mpInodVfInodGraph = (new CmpNodeDegrees<TVAttr, TEAttr>(loader)).Permutation;
+				mpIvtxVfIvtxGraph = (new CmpVertexDegrees<TVAttr, TEAttr>(loader)).Permutation;
 			}
-			_arNodes = new VfVertex<TVAttr, TEAttr>[loader.NodeCount];
-			var mpInodGraphInodVf = ReversePermutation(mpInodVfInodGraph);
+			_arNodes = new VfVertex<TVAttr, TEAttr>[loader.VertexCount];
+			var mpIvtxGraphIvtxVf = ReversePermutation(mpIvtxVfIvtxGraph);
 			var dctEdge = new Dictionary<VfEdge, VfEdge>();
 
-			for (var inodVf = 0; inodVf < loader.NodeCount; inodVf++)
+			for (var ivtxVf = 0; ivtxVf < loader.VertexCount; ivtxVf++)
 			{
-				_arNodes[inodVf] = new VfVertex<TVAttr, TEAttr>(loader, mpInodVfInodGraph[inodVf], dctEdge, mpInodGraphInodVf);
+				_arNodes[ivtxVf] = new VfVertex<TVAttr, TEAttr>(loader, mpIvtxVfIvtxGraph[ivtxVf], dctEdge, mpIvtxGraphIvtxVf);
 			}
 		}
 		#endregion
@@ -96,7 +96,7 @@ namespace vflibcs
 
 	class VfGraph : VfGraph<Object, Object>
 	{
-		internal VfGraph(IGraphLoader<Object, Object> loader, List<int> mpInodVfInodGraph = null) : base(loader, mpInodVfInodGraph) {}
+		internal VfGraph(IGraphLoader<Object, Object> loader, List<int> mpIvtxVfIvtxGraph = null) : base(loader, mpIvtxVfIvtxGraph) {}
 	}
 #if NUNIT
 	[TestFixture]
@@ -106,20 +106,20 @@ namespace vflibcs
 		VfGraph SetupGraph()
 		{
 			var graph = new Graph();
-			Assert.AreEqual(0, graph.InsertNode());
-			Assert.AreEqual(1, graph.InsertNode());
-			Assert.AreEqual(2, graph.InsertNode());
-			Assert.AreEqual(3, graph.InsertNode());
-			Assert.AreEqual(4, graph.InsertNode());
-			Assert.AreEqual(5, graph.InsertNode());
+			Assert.AreEqual(0, graph.InsertVertex());
+			Assert.AreEqual(1, graph.InsertVertex());
+			Assert.AreEqual(2, graph.InsertVertex());
+			Assert.AreEqual(3, graph.InsertVertex());
+			Assert.AreEqual(4, graph.InsertVertex());
+			Assert.AreEqual(5, graph.InsertVertex());
 			graph.InsertEdge(0, 1);
 			graph.InsertEdge(1, 2);
 			graph.InsertEdge(2, 3);
 			graph.InsertEdge(3, 4);
 			graph.InsertEdge(4, 5);
 			graph.InsertEdge(5, 0);
-			graph.DeleteNode(0);
-			graph.DeleteNode(1);
+			graph.DeleteVertex(0);
+			graph.DeleteVertex(1);
 			graph.InsertEdge(5, 2);
 			graph.InsertEdge(2, 4);
 
@@ -135,7 +135,7 @@ namespace vflibcs
 		[Test]
 		public void TestNodeCount()
 		{
-			Assert.AreEqual(4, SetupGraph().NodeCount);
+			Assert.AreEqual(4, SetupGraph().VertexCount);
 		}
 		#endregion
 	}

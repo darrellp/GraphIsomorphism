@@ -7,49 +7,50 @@ using NUnit.Framework;
 
 namespace vflibcs
 {
-	public class Graph<TVAttr, TEAttr> : IGraphLoader<TVAttr, TEAttr>
-		where TVAttr : class
-		where TEAttr : class
+	public class Edge<TE>
+	{
+		public TE Attr;
+		public int IDFrom = Graph.VidIllegal;
+		public int IDTo = Graph.VidIllegal;
+	}
+
+	public class Vertex<TV, TE>
+	{
+		public TV Attr;
+		public readonly SortedList<int, Edge<TE>> EdgesFrom = new SortedList<int, Edge<TE>>(); // Key is named id of "to" vertex
+		public readonly List<Edge<TE>> EdgesTo = new List<Edge<TE>>();
+		public int ID = Graph.VidIllegal;
+
+		public Edge<TE> FindOutEdge(int vidTo)
+		{
+			try
+			{
+				return EdgesFrom[vidTo];
+			}
+			catch (Exception)
+			{
+				VfException.Error("Inconsistent Data");
+			}
+			return null;
+		}
+	}
+
+	public class Graph<TV, TE> : IGraphLoader<TV, TE>
+		where TV : class
+		where TE : class
 	{
 		#region Private variables
-		internal readonly SortedList<int, NNode> Nodes = new SortedList<int, NNode>(); // Sorted by node id's
-		internal const int NidIllegal = -1;
+		internal readonly SortedList<int, Vertex<TV, TE>> Vertices = new SortedList<int, Vertex<TV, TE>>(); // Sorted by vertex id's
+		internal const int VidIllegal = -1;
 		#endregion
 
 		#region Private structs
-		internal class ENode
-		{
-			public TEAttr Attr;
-			public int IDFrom = NidIllegal;
-			public int IDTo = NidIllegal;
-		}
-
-		internal class NNode
-		{
-			public TVAttr Attr;
-			public readonly SortedList<int, ENode> EdgesFrom = new SortedList<int, ENode>(); // Key is named id of "to" node
-			public readonly List<ENode> EdgesTo = new List<ENode>();
-			public int ID = NidIllegal;
-
-			public ENode FindOutEdge(int nidTo)
-			{
-				try
-				{
-					return EdgesFrom[nidTo];
-				}
-				catch (Exception)
-				{
-					VfException.Error("Inconsistent Data");
-				}
-				return null;
-			}
-		}
 		#endregion
 
 		#region Properties
-		public int NodeCount
+		public int VertexCount
 		{
-			get { return Nodes.Count; }
+			get { return Vertices.Count; }
 		}
 		#endregion
 
@@ -75,20 +76,20 @@ namespace vflibcs
 		internal Graph IsomorphicShuffling(Random rnd)
 		{
 			var graph = new Graph();
-			var ariShuffle = new int[NodeCount];
+			var ariShuffle = new int[VertexCount];
 
-			for (var i = 0; i < NodeCount; i++)
+			for (var i = 0; i < VertexCount; i++)
 			{
 				ariShuffle[i] = i;
 			}
 			Shuffle(ariShuffle, rnd);
 
-			graph.InsertNodes(NodeCount);
+			graph.InsertVertices(VertexCount);
 
-			for (var inod = 0; inod < NodeCount; inod++)
+			for (var ivtx = 0; ivtx < VertexCount; ivtx++)
 			{
-				var inodShuffled = ariShuffle[inod];
-				var nod = Nodes[inodShuffled];
+				var ivtxShuffled = ariShuffle[ivtx];
+				var nod = Vertices[ivtxShuffled];
 
 				foreach (var end in nod.EdgesFrom.Values)
 				{
@@ -100,48 +101,48 @@ namespace vflibcs
 		#endregion
 
 		#region Accessors
-		internal NNode FindNode(int id)
+		internal Vertex<TV, TE> FindVertex(int id)
 		{
-			var i = Nodes.IndexOfKey(id);
+			var i = Vertices.IndexOfKey(id);
 			if (i >= 0)
 			{
-				return Nodes.Values[i];
+				return Vertices.Values[i];
 			}
 			VfException.Error("Inconsistent data");
 			return null;
 		}
 
-		public int IdFromPos(int inod)
+		public int IdFromPos(int ivtx)
 		{
-			return Nodes.Values[inod].ID;
+			return Vertices.Values[ivtx].ID;
 		}
 
-		public int PosFromId(int nid)
+		public int PosFromId(int vid)
 		{
-			return Nodes.IndexOfKey(nid);
+			return Vertices.IndexOfKey(vid);
 		}
 
-		public TVAttr GetNodeAttr(int id)
+		public TV GetVertexAttr(int id)
 		{
-			return FindNode(id).Attr;
+			return FindVertex(id).Attr;
 		}
 
 		public int InEdgeCount(int id)
 		{
-			return FindNode(id).EdgesTo.Count;
+			return FindVertex(id).EdgesTo.Count;
 		}
 
 		public int OutEdgeCount(int id)
 		{
-			return FindNode(id).EdgesFrom.Count;
+			return FindVertex(id).EdgesFrom.Count;
 		}
 
-		public int GetInEdge(int idTo, int pos, out TEAttr attr)
+		public int GetInEdge(int idTo, int pos, out TE attr)
 		{
-			ENode end = null;
+			Edge<TE> end = null;
 			try
 			{
-				end = FindNode(idTo).EdgesTo[pos];
+				end = FindVertex(idTo).EdgesTo[pos];
 			}
 			catch (Exception)
 			{
@@ -153,12 +154,12 @@ namespace vflibcs
 			return end.IDFrom;
 		}
 
-		public int GetOutEdge(int idFrom, int pos, out TEAttr attr)
+		public int GetOutEdge(int idFrom, int pos, out TE attr)
 		{
-			ENode end = null;
+			Edge<TE> end = null;
 			try
 			{
-				end = FindNode(idFrom).EdgesFrom.Values[pos];
+				end = FindVertex(idFrom).EdgesFrom.Values[pos];
 			}
 			catch (Exception)
 			{
@@ -172,38 +173,38 @@ namespace vflibcs
 		#endregion
 
 		#region Insertion/Deletion
-		public int InsertNode(TVAttr attr = null)
+		public int InsertVertex(TV attr = null)
 		{
-			var nod = new NNode {ID = Nodes.Count, Attr = attr};
-			Nodes.Add(nod.ID, nod);
+			var nod = new Vertex<TV, TE> {ID = Vertices.Count, Attr = attr};
+			Vertices.Add(nod.ID, nod);
 			return nod.ID;
 		}
 
 		// ReSharper disable once UnusedMethodReturnValue.Global
-		public int InsertNodes(int cnod, TVAttr vattr = null)
+		public int InsertVertices(int cnod, TV vattr = null)
 		{
-			var nid = InsertNode(vattr);
+			var vid = InsertVertex(vattr);
 
 			for (var i = 0; i < cnod - 1; i++)
 			{
-				InsertNode(vattr);
+				InsertVertex(vattr);
 			}
 
-			return nid;
+			return vid;
 		}
 
-		public void InsertEdge(int nidFrom, int nidTo, TEAttr attr = null)
+		public void InsertEdge(int vidFrom, int vidTo, TE attr = null)
 		{
-			var end = new ENode();
-			var nodFrom = FindNode(nidFrom);
-			var nodTo = FindNode(nidTo);
+			var end = new Edge<TE>();
+			var nodFrom = FindVertex(vidFrom);
+			var nodTo = FindVertex(vidTo);
 
-			end.IDFrom = nidFrom;
-			end.IDTo = nidTo;
+			end.IDFrom = vidFrom;
+			end.IDTo = vidTo;
 			end.Attr = attr;
 			try
 			{
-				nodFrom.EdgesFrom.Add(nidTo, end);
+				nodFrom.EdgesFrom.Add(vidTo, end);
 				nodTo.EdgesTo.Add(end);
 			}
 			catch (Exception)
@@ -212,10 +213,10 @@ namespace vflibcs
 			}
 		}
 
-		public void DeleteNode(int nid)
+		public void DeleteVertex(int vid)
 		{
-			var nod = FindNode(nid);
-			var arend = new ENode[nod.EdgesFrom.Count + nod.EdgesTo.Count];
+			var nod = FindVertex(vid);
+			var arend = new Edge<TE>[nod.EdgesFrom.Count + nod.EdgesTo.Count];
 			nod.EdgesFrom.Values.CopyTo(arend, 0);
 			nod.EdgesTo.CopyTo(arend, nod.EdgesFrom.Count);
 
@@ -223,16 +224,16 @@ namespace vflibcs
 			{
 				DeleteEdge(end.IDFrom, end.IDTo);
 			}
-			Nodes.Remove(nod.ID);
+			Vertices.Remove(nod.ID);
 		}
 
-		public void DeleteEdge(int nidFrom, int nidTo)
+		public void DeleteEdge(int vidFrom, int vidTo)
 		{
-			var nodFrom = FindNode(nidFrom);
-			var nodTo = FindNode(nidTo);
-			var end = nodFrom.FindOutEdge(nidTo);
+			var nodFrom = FindVertex(vidFrom);
+			var nodTo = FindVertex(vidTo);
+			var end = nodFrom.FindOutEdge(vidTo);
 
-			nodFrom.EdgesFrom.Remove(nidTo);
+			nodFrom.EdgesFrom.Remove(vidTo);
 			nodTo.EdgesTo.Remove(end);
 		}
 		#endregion
@@ -256,9 +257,9 @@ namespace vflibcs
 		public void TestDeleteEdge()
 		{
 			var gr = new Graph();
-			Assert.AreEqual(0, gr.InsertNode());
-			Assert.AreEqual(1, gr.InsertNode());
-			Assert.AreEqual(2, gr.InsertNode());
+			Assert.AreEqual(0, gr.InsertVertex());
+			Assert.AreEqual(1, gr.InsertVertex());
+			Assert.AreEqual(2, gr.InsertVertex());
 			gr.InsertEdge(0, 1);
 			gr.InsertEdge(1, 2);
 			gr.InsertEdge(2, 0);
@@ -273,30 +274,30 @@ namespace vflibcs
 
 		[ExpectedException(typeof (VfException))]
 		[Test]
-		public void TestDeleteNode()
+		public void TestDeleteVertex()
 		{
 			var gr = new Graph();
-			Assert.AreEqual(0, gr.InsertNode());
-			Assert.AreEqual(1, gr.InsertNode());
-			Assert.AreEqual(2, gr.InsertNode());
+			Assert.AreEqual(0, gr.InsertVertex());
+			Assert.AreEqual(1, gr.InsertVertex());
+			Assert.AreEqual(2, gr.InsertVertex());
 			gr.InsertEdge(0, 1);
 			gr.InsertEdge(1, 2);
 			gr.InsertEdge(2, 0);
-			gr.DeleteNode(0);
+			gr.DeleteVertex(0);
 
 			Assert.AreEqual(1, gr.OutEdgeCount(1));
 			Assert.AreEqual(0, gr.OutEdgeCount(2));
 
-			// Trigger the exception - shouldn't be a zero node any more...
-			gr.FindNode(0);
+			// Trigger the exception - shouldn't be a zero vertex any more...
+			gr.FindVertex(0);
 		}
 
 		[ExpectedException(typeof (VfException))]
 		[Test]
-		public void TestFindNodeNotFound()
+		public void TestFindVertexNotFound()
 		{
 			var gr = new Graph();
-			var nod = gr.FindNode(0);
+			var nod = gr.FindVertex(0);
 			Assert.IsNotNull(nod);
 		}
 
@@ -306,8 +307,8 @@ namespace vflibcs
 		{
 			object attr;
 			var gr = new Graph();
-			var idFrom = gr.InsertNode(0);
-			var idTo = gr.InsertNode(1);
+			var idFrom = gr.InsertVertex(0);
+			var idTo = gr.InsertVertex(1);
 			gr.InsertEdge(idFrom, idTo, 100);
 			Assert.AreEqual(gr.OutEdgeCount(idFrom), 1);
 			Assert.AreEqual(gr.OutEdgeCount(idTo), 0);
@@ -321,13 +322,13 @@ namespace vflibcs
 
 		[ExpectedException(typeof (VfException))]
 		[Test]
-		public void TestInsertNode()
+		public void TestInsertVertex()
 		{
 			var gr = new Graph();
-			gr.InsertNode(1);
-			var nod = gr.FindNode(0);
+			gr.InsertVertex(1);
+			var nod = gr.FindVertex(0);
 			Assert.IsNotNull(nod);
-			nod = gr.FindNode(1);
+			nod = gr.FindVertex(1);
 			Assert.IsNotNull(nod);
 		}
 

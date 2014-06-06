@@ -19,22 +19,22 @@ namespace vflibcs
 		#region Private Variables
 		internal const int MapIllegal = -1;
 
-		// Mapping between node positions in VfGraph and the positions in the original Graph.
-		// This is just the permutation to sort the original graph nodes by degrees.
+		// Mapping between vertex positions in VfGraph and the positions in the original Graph.
+		// This is just the permutation to sort the original graph vertices by degrees.
 		private readonly List<int> _degreeSortedToOriginal1;
 		private readonly List<int> _degreeSortedToOriginal2;
 
 		// The original ILoader's - needed to map back the permutation
-		// to the original node id's after the match
+		// to the original vertex id's after the match
 		private readonly IGraphLoader<TVAttr, TEAttr> _ldr1;
 		private readonly IGraphLoader<TVAttr, TEAttr> _ldr2;
 
-		// The actual mappings we're building up.  Note that in our VfGraph the ordering of nodes is based
+		// The actual mappings we're building up.  Note that in our VfGraph the ordering of vertices is based
 		// on decreasing total degree so it's not generally the same as in the original graph.  The
 		// isomorphisms being built are based on this ordering rather than that in the original graph.
 		// Before they're returned we massage the permutations to match that in the original graph.
-		private readonly Dictionary<int, int> _vfGraphInode1To2Isomorphism;
-		private readonly Dictionary<int, int> _vfGraphInode2To1Isomorphism;
+		private readonly Dictionary<int, int> _vfGraphIvtx1To2Isomorphism;
+		private readonly Dictionary<int, int> _vfGraphIvtx2To1Isomorphism;
 
 		// Counts for degrees into and out of the isomorphism being built.  Part of the
 		// the magic of the VF algorithm is to check these to verify validity.
@@ -48,20 +48,20 @@ namespace vflibcs
 		internal VfGraph<TVAttr, TEAttr> VfGraph2 { get; set; }
 		internal VfGraph<TVAttr, TEAttr> VfGraph1 { get; set; }
 
-		// Lists of nodes not yet participating in the current isomorphism
-		// These lists are sorted on index but since the original nodes were
+		// Lists of vertices not yet participating in the current isomorphism
+		// These lists are sorted on index but since the original vertices were
 		// sorted by degree, that means that these are also sorted by degree
 		// which is a key performance heuristic.
 
-		// Nodes that point into the current isomorphism set without participating in it
+		// Vertices that point into the current isomorphism set without participating in it
 		internal SortedListNoValue<int> LstIn1 { get; set; }
 		internal SortedListNoValue<int> LstIn2 { get; set; }
 
-		// Nodes that point out of the current isomorphism set without participating in it
+		// Vertices that point out of the current isomorphism set without participating in it
 		internal SortedListNoValue<int> LstOut1 { get; set; }
 		internal SortedListNoValue<int> LstOut2 { get; set; }
 
-		// Nodes that are not connected with any node in the current isomorphism candidate
+		// Vertices that are not connected with any vertex in the current isomorphism candidate
 		internal SortedListNoValue<int> LstDisconnected1 { get; set; }
 		internal SortedListNoValue<int> LstDisconnected2 { get; set; }
 		#endregion
@@ -71,15 +71,15 @@ namespace vflibcs
 		// or subgraph isomorphism.
 		internal readonly Func<int, int, bool> FnCompareDegrees;
 
-		// In a straight isomorphism degrees of matching nodes must match exactly
+		// In a straight isomorphism degrees of matching vertices must match exactly
 		private static bool CmpIsomorphism(int degree1, int degree2)
 		{
 			return degree1 == degree2;
 		}
 
-		// In a subgraph isomorphism, nodes in the original graph may have lower degree
-		// than nodes in the subgraph since the subgraph is embedded in the "supergraph"
-		// which may have nodes connecting to the subgraph increasing the degree of nodes
+		// In a subgraph isomorphism, vertices in the original graph may have lower degree
+		// than vertices in the subgraph since the subgraph is embedded in the "supergraph"
+		// which may have vertices connecting to the subgraph increasing the degree of vertices
 		// in the subgraph.
 		private static bool CmpSubgraphIsomorphism(int degreeSubgraph, int degreeOriginal)
 		{
@@ -117,26 +117,26 @@ namespace vflibcs
 				FnCompareDegrees = CmpSubgraphIsomorphism;
 			}
 
-			// Node indices in VfGraphs are sorted by vertex degree
-			_degreeSortedToOriginal1 = new CmpNodeDegrees<TVAttr, TEAttr>(loader1).Permutation;
-			_degreeSortedToOriginal2 = new CmpNodeDegrees<TVAttr, TEAttr>(loader2).Permutation;
+			// Vertex indices in VfGraphs are sorted by vertex degree
+			_degreeSortedToOriginal1 = new CmpVertexDegrees<TVAttr, TEAttr>(loader1).Permutation;
+			_degreeSortedToOriginal2 = new CmpVertexDegrees<TVAttr, TEAttr>(loader2).Permutation;
 			VfGraph1 = new VfGraph<TVAttr, TEAttr>(loader1, _degreeSortedToOriginal1);
 			VfGraph2 = new VfGraph<TVAttr, TEAttr>(loader2, _degreeSortedToOriginal2);
 
 			// Set up space for isomorphism mappings
-			_vfGraphInode1To2Isomorphism = new Dictionary<int, int>(loader1.NodeCount);
-			_vfGraphInode2To1Isomorphism = new Dictionary<int, int>(loader2.NodeCount);
+			_vfGraphIvtx1To2Isomorphism = new Dictionary<int, int>(loader1.VertexCount);
+			_vfGraphIvtx2To1Isomorphism = new Dictionary<int, int>(loader2.VertexCount);
 
-			// When we start no isomorphic mappings and all nodes are disconnected
+			// When we start no isomorphic mappings and all vertices are disconnected
 			// from the isomorphism.
-			for (var i = 0; i < loader1.NodeCount; i++)
+			for (var i = 0; i < loader1.VertexCount; i++)
 			{
-				_vfGraphInode1To2Isomorphism[i] = MapIllegal;
+				_vfGraphIvtx1To2Isomorphism[i] = MapIllegal;
 				LstDisconnected1.Add(i);
 			}
-			for (var i = 0; i < loader2.NodeCount; i++)
+			for (var i = 0; i < loader2.VertexCount; i++)
 			{
-				_vfGraphInode2To1Isomorphism[i] = MapIllegal;
+				_vfGraphIvtx2To1Isomorphism[i] = MapIllegal;
 				LstDisconnected2.Add(i);
 			}
 		}
@@ -156,16 +156,16 @@ namespace vflibcs
 		/// <returns>True if compatible, False if not</returns>
 		private bool FCompatibleDegrees()
 		{
-			if (!FnCompareDegrees(VfGraph1.NodeCount, VfGraph2.NodeCount))
+			if (!FnCompareDegrees(VfGraph1.VertexCount, VfGraph2.VertexCount))
 			{
 				return false;
 			}
 
-			// Since we've sorted the nodes by degree, we can do a quick compare on the degree sequence
+			// Since we've sorted the vertices by degree, we can do a quick compare on the degree sequence
 			// on a vertex by vertex basis...
-			for (var iNode = 0; iNode < VfGraph2.NodeCount; iNode++)
+			for (var iVertex = 0; iVertex < VfGraph2.VertexCount; iVertex++)
 			{
-				if (!FnCompareDegrees(VfGraph1.TotalDegree(iNode), VfGraph2.TotalDegree(iNode)))
+				if (!FnCompareDegrees(VfGraph1.TotalDegree(iVertex), VfGraph2.TotalDegree(iVertex)))
 				{
 					return false;
 				}
@@ -182,10 +182,10 @@ namespace vflibcs
 		public IEnumerable<FullMapping> Matches()
 		{
 			// Check for an empty second graph
-			if (_ldr2.NodeCount == 0)
+			if (_ldr2.VertexCount == 0)
 			{
 				// If the second is empty, check for a successful "match"
-				if (FnCompareDegrees(_ldr1.NodeCount, 0))
+				if (FnCompareDegrees(_ldr1.VertexCount, 0))
 				{
 					// Return empty mapping - successful, but nothing to map to
 					yield return new FullMapping(new Dictionary<int, int>(), new Dictionary<int, int>());
@@ -212,19 +212,19 @@ namespace vflibcs
 			// The general structure here is:
 			// While (true)
 			//		if (backtracking)
-			//			if there are no graph2 nodes to backtrack to, we can't find any other isomorphisms so return
-			//			pop off the previous graph2 node to continue it's match
+			//			if there are no graph2 vertices to backtrack to, we can't find any other isomorphisms so return
+			//			pop off the previous graph2 vertex to continue it's match
 			//			perform backtrack actions
 			//		else
-			//			pick a new graph2 node to try to match
-			//		while (there are still potential graph1 nodes to match our current graph2 node)
-			//			if (the selected graph1 node is a feasible match to our current graph2 node)
+			//			pick a new graph2 vertex to try to match
+			//		while (there are still potential graph1 vertices to match our current graph2 vertex)
+			//			if (the selected graph1 vertex is a feasible match to our current graph2 vertex)
 			//				Add the match (and record it if we later need to backtrack)
 			//				if (we've got a complete isomorphism)
 			//					yield the isomorphism
-			//					Push our current graph2 node so it will be popped off during backtracking
+			//					Push our current graph2 vertex so it will be popped off during backtracking
 			//					break the inner loop to trigger artificial backtrack
-			//				push the current graph2 node search and continue in outer loop with no backtracking
+			//				push the current graph2 vertex search and continue in outer loop with no backtracking
 			//					
 			while (true)
 			{
@@ -256,16 +256,16 @@ namespace vflibcs
 				{
 					// Moving forward - new candidate finder
 
-					// Each new candidate finder we produce here picks a node in graph2 and works
-					// at matching it to a node in graph1 until there are no possibile graph1 nodes left.
+					// Each new candidate finder we produce here picks a vertex in graph2 and works
+					// at matching it to a vertex in graph1 until there are no possibile graph1 vertices left.
 					// at that point we know that the current isomorphism is impossible since no
-					// graph1 node can be matched to the selected graph2 node.  At that point we
+					// graph1 vertex can be matched to the selected graph2 vertex.  At that point we
 					// will pop the candidate finder, backtrack any changes we've made and move to
 					// the next graph1 candidate in the previous candidate finder on the stack.
 					cf = new CandidateFinder<TVAttr, TEAttr>(this);
 
 					// Start a new backtracking record in case we fail to find a match for our
-					// selected graph2 node.
+					// selected graph2 vertex.
 					btr = new BacktrackRecord<TVAttr, TEAttr>();
 				}
 
@@ -273,8 +273,8 @@ namespace vflibcs
 				fBacktrack = true;
 				Match mchCur;
 
-				// For all the graph1 nodes that could potentially match up with the current
-				// candidateFinder's graph2 node...
+				// For all the graph1 vertices that could potentially match up with the current
+				// candidateFinder's graph2 vertex...
 				while ((mchCur = cf.NextCandidateMatch()) != null)
 				{
 					// If the candidate match is feasible
@@ -290,22 +290,22 @@ namespace vflibcs
 							Console.WriteLine("cInfeasible = {0}", cInfeasible);
 #endif
 							// Record this match
-							Dictionary<int, int> nidToNid1;
-							Dictionary<int, int> nidToNid2;
+							Dictionary<int, int> vidToVid1;
+							Dictionary<int, int> vidToVid2;
 
-							// Change the inode to inode VfGraph mapping in _vfGraphInode1To2Isomorphism
-							// to an nid to nid mapping in the original graph...
-							VfGraphVfGraphInodeToGraphGraphNid(
-								_vfGraphInode1To2Isomorphism, 
+							// Change the ivertex to ivertex VfGraph mapping in _vfGraphIvtx1To2Isomorphism
+							// to an vid to vid mapping in the original graph...
+							VfGraphVfGraphIvtxToGraphGraphVid(
+								_vfGraphIvtx1To2Isomorphism, 
 								_degreeSortedToOriginal1, 
 								_degreeSortedToOriginal2, 
-								out nidToNid1, 
-								out nidToNid2);
-							yield return new FullMapping(nidToNid1, nidToNid2);
+								out vidToVid1, 
+								out vidToVid2);
+							yield return new FullMapping(vidToVid1, vidToVid2);
 
 							// This will cause a backtrack where this candidateFinder
 							// will be popped off the stack and we'll continue 
-							// with this graph2 node looking for the next solution.
+							// with this graph2 vertex looking for the next solution.
 							stkcf.Push(cf);
 							stkbr.Push(btr);
 							break;
@@ -316,7 +316,7 @@ namespace vflibcs
 #endif
 						// Dang!  No full isomorphism yet but our choices so far aren't infeasible.
 						// Push candidate finder/backtrack record and break out of the inner loop which will
-						// cause us to pick another candidate finder/graph2 node to be mapped.
+						// cause us to pick another candidate finder/graph2 vertex to be mapped.
 						stkcf.Push(cf);
 						stkbr.Push(btr);
 						fBacktrack = false;
@@ -340,57 +340,57 @@ namespace vflibcs
 
 		#region Mapping
 		/// <summary>
-		/// Turn VfGraph to VfGraph Inode mapping into Graph to Graph nid mapping
+		/// Turn VfGraph to VfGraph Ivtx mapping into Graph to Graph vid mapping
 		/// </summary>
-		/// <param name="isomorphismVfInode1To2">The VfGraph to VfGraph mapping</param>
-		/// <param name="degreeSortedToOriginal1">VfGraph1 Inode to Graph1 Inode mapping</param>
-		/// <param name="degreeSortedToOriginal2">VfGraph2 Inode to Graph2 Inode mapping</param>
-		/// <param name="isomorphismNid1ToNid2">Returned Graph1 nid to Graph2 nid mapping</param>
-		/// <param name="isomorphismNid2ToNid1">Returned Graph2 nid to Graph1 nid mapping</param>
-		private void VfGraphVfGraphInodeToGraphGraphNid(
-			Dictionary<int, int> isomorphismVfInode1To2,
+		/// <param name="isomorphismVfIvtx1To2">The VfGraph to VfGraph mapping</param>
+		/// <param name="degreeSortedToOriginal1">VfGraph1 Ivtx to Graph1 Ivtx mapping</param>
+		/// <param name="degreeSortedToOriginal2">VfGraph2 Ivtx to Graph2 Ivtx mapping</param>
+		/// <param name="isomorphismVid1ToVid2">Returned Graph1 vid to Graph2 vid mapping</param>
+		/// <param name="isomorphismVid2ToVid1">Returned Graph2 vid to Graph1 vid mapping</param>
+		private void VfGraphVfGraphIvtxToGraphGraphVid(
+			Dictionary<int, int> isomorphismVfIvtx1To2,
 			List<int> degreeSortedToOriginal1,
 			List<int> degreeSortedToOriginal2,
-			out Dictionary<int, int> isomorphismNid1ToNid2,
-			out Dictionary<int, int> isomorphismNid2ToNid1)
+			out Dictionary<int, int> isomorphismVid1ToVid2,
+			out Dictionary<int, int> isomorphismVid2ToVid1)
 		{
 			// Holding areas for new permutations
-			isomorphismNid1ToNid2 = new Dictionary<int, int>();
-			isomorphismNid2ToNid1 = new Dictionary<int, int>();
+			isomorphismVid1ToVid2 = new Dictionary<int, int>();
+			isomorphismVid2ToVid1 = new Dictionary<int, int>();
 
-			foreach (var pair in isomorphismVfInode1To2)
+			foreach (var pair in isomorphismVfIvtx1To2)
 			{
-				var vfInod2 = pair.Value;
-				var inode1 = degreeSortedToOriginal1[pair.Key];
-				var nid1 = _ldr1.IdFromPos(inode1);
-				if (vfInod2 == MapIllegal)
+				var vfIvtx2 = pair.Value;
+				var ivtx1 = degreeSortedToOriginal1[pair.Key];
+				var vid1 = _ldr1.IdFromPos(ivtx1);
+				if (vfIvtx2 == MapIllegal)
 				{
-					isomorphismNid1ToNid2[nid1] = MapIllegal;
+					isomorphismVid1ToVid2[vid1] = MapIllegal;
 					break;
 				}
-				var inode2 = degreeSortedToOriginal2[vfInod2];
-				var nid2 = _ldr2.IdFromPos(inode2);
-				isomorphismNid1ToNid2[nid1] = nid2;
-				isomorphismNid2ToNid1[nid2] = nid1;
+				var ivtx2 = degreeSortedToOriginal2[vfIvtx2];
+				var vid2 = _ldr2.IdFromPos(ivtx2);
+				isomorphismVid1ToVid2[vid1] = vid2;
+				isomorphismVid2ToVid1[vid2] = vid1;
 			}
 		}
 
 		/// <summary>
-		/// Indicate that two nodes are isomorphic
+		/// Indicate that two vertices are isomorphic
 		/// </summary>
-		/// <param name="inod1"></param>
-		/// <param name="inod2"></param>
-		internal void SetIsomorphic(int inod1, int inod2)
+		/// <param name="ivtx1"></param>
+		/// <param name="ivtx2"></param>
+		internal void SetIsomorphic(int ivtx1, int ivtx2)
 		{
 			// Set the mapping in both directions
-			_vfGraphInode1To2Isomorphism[inod1] = inod2;
-			_vfGraphInode2To1Isomorphism[inod2] = inod1;
+			_vfGraphIvtx1To2Isomorphism[ivtx1] = ivtx2;
+			_vfGraphIvtx2To1Isomorphism[ivtx2] = ivtx1;
 		}
 
 		// Undo a previously made mapping
-		internal void RemoveFromMappingList(int iGraph, int inod)
+		internal void RemoveFromMappingList(int iGraph, int ivtx)
 		{
-			(iGraph == 1 ? _vfGraphInode1To2Isomorphism : _vfGraphInode2To1Isomorphism)[inod] = MapIllegal;
+			(iGraph == 1 ? _vfGraphIvtx1To2Isomorphism : _vfGraphIvtx2To1Isomorphism)[ivtx] = MapIllegal;
 		}
 		#endregion
 
@@ -398,13 +398,13 @@ namespace vflibcs
 		/// <summary>
 		/// Count vertices in a list which are in a particular classification
 		/// </summary>
-		/// <param name="lstOfNodeIndices">List of node indices to check</param>
+		/// <param name="lstOfVertexIndices">List of vertex indices to check</param>
 		/// <param name="vfgr">Graph which contains the vertex</param>
 		/// <param name="grp">Classification to check for</param>
 		/// <returns>Count of vertices in list which are classified properly</returns>
-		private int GetGroupCountInList(IEnumerable<int> lstOfNodeIndices, VfGraph<TVAttr, TEAttr> vfgr, Group grp)
+		private int GetGroupCountInList(IEnumerable<int> lstOfVertexIndices, VfGraph<TVAttr, TEAttr> vfgr, Group grp)
 		{
-			return lstOfNodeIndices.Count(inod => ((int) vfgr.GetGroup(inod) & (int) grp) != 0);
+			return lstOfVertexIndices.Count(ivtx => ((int) vfgr.GetGroup(ivtx) & (int) grp) != 0);
 		}
 
 		
@@ -425,13 +425,13 @@ namespace vflibcs
 			var cnodInMapping1 = 0;
 
 			// For each vertex in lstConnected1 that is part of the isomorphism...
-			foreach (var inodMap in lstConnected1.Select(inod => _vfGraphInode1To2Isomorphism[inod]).Where(iNode => iNode != MapIllegal))
+			foreach (var ivtxMap in lstConnected1.Select(ivtx => _vfGraphIvtx1To2Isomorphism[ivtx]).Where(ivtx => ivtx != MapIllegal))
 			{
 				// Count the isomorphism participants from list1
 				cnodInMapping1++;
 
 				// If it's matched vertex isn't contained in the second group, we fail
-				if (!lstConnected2.Contains(inodMap))
+				if (!lstConnected2.Contains(ivtxMap))
 				{
 					return false;
 				}
@@ -448,12 +448,12 @@ namespace vflibcs
 
 
 		/// <summary>
-		/// Verify counts of node classes not yet participating in isomorphism
+		/// Verify counts of Vertex classes not yet participating in isomorphism
 		/// </summary>
-		/// <param name="lstIn1">Nodes pointing in to newly matched node in Graph1</param>
-		/// <param name="lstOut1">Nodes pointed to from newly matched node in Graph1</param>
-		/// <param name="lstIn2">Nodes pointing in to newly matched node in Graph2</param>
-		/// <param name="lstOut2">Nodes pointed to from newly matched node in Graph2</param>
+		/// <param name="lstIn1">Vertices pointing in to newly matched vertex in Graph1</param>
+		/// <param name="lstOut1">Vertices pointed to from newly matched vertex in Graph1</param>
+		/// <param name="lstIn2">Vertices pointing in to newly matched vertex in Graph2</param>
+		/// <param name="lstOut2">Vertices pointed to from newly matched vertex in Graph2</param>
 		/// <returns></returns>
 		private bool FInOutNew(
 			IEnumerable<int> lstIn1,
@@ -461,49 +461,49 @@ namespace vflibcs
 			IEnumerable<int> lstIn2,
 			IEnumerable<int> lstOut2)
 		{
-			var nodesIn1 = lstIn1 as List<int> ?? lstIn1.ToList();
-			var nodesIn2 = lstIn2 as List<int> ?? lstIn2.ToList();
-			var nodesOut1 = lstOut1 as List<int> ?? lstOut1.ToList();
-			var nodesOut2 = lstOut2 as List<int> ?? lstOut2.ToList();
+			var verticesIn1 = lstIn1 as List<int> ?? lstIn1.ToList();
+			var verticesIn2 = lstIn2 as List<int> ?? lstIn2.ToList();
+			var verticesOut1 = lstOut1 as List<int> ?? lstOut1.ToList();
+			var verticesOut2 = lstOut2 as List<int> ?? lstOut2.ToList();
 
 			if (!FnCompareDegrees(
-				GetGroupCountInList(nodesIn1, VfGraph1, Group.FromMapping),
-				GetGroupCountInList(nodesIn2, VfGraph2, Group.FromMapping)))
+				GetGroupCountInList(verticesIn1, VfGraph1, Group.FromMapping),
+				GetGroupCountInList(verticesIn2, VfGraph2, Group.FromMapping)))
 			{
 				return false;
 			}
 
 			if (!FnCompareDegrees(
-				GetGroupCountInList(nodesOut1, VfGraph1, Group.FromMapping),
-				GetGroupCountInList(nodesOut2, VfGraph2, Group.FromMapping)))
+				GetGroupCountInList(verticesOut1, VfGraph1, Group.FromMapping),
+				GetGroupCountInList(verticesOut2, VfGraph2, Group.FromMapping)))
 			{
 				return false;
 			}
 
 			if (!FnCompareDegrees(
-				GetGroupCountInList(nodesIn1, VfGraph1, Group.ToMapping),
-				GetGroupCountInList(nodesIn2, VfGraph2, Group.ToMapping)))
+				GetGroupCountInList(verticesIn1, VfGraph1, Group.ToMapping),
+				GetGroupCountInList(verticesIn2, VfGraph2, Group.ToMapping)))
 			{
 				return false;
 			}
 
 			if (!FnCompareDegrees(
-				GetGroupCountInList(nodesOut1, VfGraph1, Group.ToMapping),
-				GetGroupCountInList(nodesOut2, VfGraph2, Group.ToMapping)))
+				GetGroupCountInList(verticesOut1, VfGraph1, Group.ToMapping),
+				GetGroupCountInList(verticesOut2, VfGraph2, Group.ToMapping)))
 			{
 				return false;
 			}
 
 			if (!FnCompareDegrees(
-				GetGroupCountInList(nodesOut1, VfGraph1, Group.Disconnected),
-				GetGroupCountInList(nodesOut2, VfGraph2, Group.Disconnected)))
+				GetGroupCountInList(verticesOut1, VfGraph1, Group.Disconnected),
+				GetGroupCountInList(verticesOut2, VfGraph2, Group.Disconnected)))
 			{
 				return false;
 			}
 
 			if (!FnCompareDegrees(
-				GetGroupCountInList(nodesIn1, VfGraph1, Group.Disconnected),
-				GetGroupCountInList(nodesIn2, VfGraph2, Group.Disconnected)))
+				GetGroupCountInList(verticesIn1, VfGraph1, Group.Disconnected),
+				GetGroupCountInList(verticesIn2, VfGraph2, Group.Disconnected)))
 			{
 				return false;
 			}
@@ -521,14 +521,14 @@ namespace vflibcs
 		/// <returns>True if feasible, False if not</returns>
 		private bool FFeasible(Match mtc)
 		{
-			var inod1 = mtc.Inod1;
-			var inod2 = mtc.Inod2;
+			var ivtx1 = mtc.Ivtx1;
+			var ivtx2 = mtc.Ivtx2;
 
 			// Allow the user to override with a context check on the matching.
 			if (_fContextCheck)
 			{
-				var icc1 = VfGraph1.GetAttr(inod1) as IContextCheck;
-				var icc2 = VfGraph2.GetAttr(inod2) as IContextCheck;
+				var icc1 = VfGraph1.GetAttr(ivtx1) as IContextCheck;
+				var icc2 = VfGraph2.GetAttr(ivtx2) as IContextCheck;
 
 				if (icc1 != null && icc2 != null)
 				{
@@ -540,12 +540,12 @@ namespace vflibcs
 				}
 			}
 
-			var lstIn1 = VfGraph1.InNeighbors(inod1);
-			var lstIn2 = VfGraph2.InNeighbors(inod2);
-			var lstOut1 = VfGraph1.OutNeighbors(inod1);
-			var lstOut2 = VfGraph2.OutNeighbors(inod2);
+			var lstIn1 = VfGraph1.InNeighbors(ivtx1);
+			var lstIn2 = VfGraph2.InNeighbors(ivtx2);
+			var lstOut1 = VfGraph1.OutNeighbors(ivtx1);
+			var lstOut2 = VfGraph2.OutNeighbors(ivtx2);
 
-			// Node1's In Neighbors in mapping must map to Node2's In Neighbors...
+			// Vertex1's In Neighbors in mapping must map to Vertex2's In Neighbors...
 			if (!FLocallyIsomorphic(lstIn1, lstIn2))
 			{
 				return false;
@@ -583,45 +583,45 @@ namespace vflibcs
 		/// <returns>True if match is locally consistent with a full isomorphism</returns>
 		private bool FAddMatchToSolution(Match mtc, BacktrackRecord<TVAttr, TEAttr> btr)
 		{
-			var inod1 = mtc.Inod1;
-			var inod2 = mtc.Inod2;
+			var ivtx1 = mtc.Ivtx1;
+			var ivtx2 = mtc.Ivtx2;
 
 			// Record the match action in the backtrackRecord
-			btr.SetMatch(mtc.Inod1, mtc.Inod2, this);
+			btr.SetMatch(mtc.Ivtx1, mtc.Ivtx2, this);
 
-			// In and Out neighbors of the nodes in the match
-			var lstIn1 = VfGraph1.InNeighbors(inod1);
-			var lstIn2 = VfGraph2.InNeighbors(inod2);
-			var lstOut1 = VfGraph1.OutNeighbors(inod1);
-			var lstOut2 = VfGraph2.OutNeighbors(inod2);
+			// In and Out neighbors of the vertices in the match
+			var lstIn1 = VfGraph1.InNeighbors(ivtx1);
+			var lstIn2 = VfGraph2.InNeighbors(ivtx2);
+			var lstOut1 = VfGraph1.OutNeighbors(ivtx1);
+			var lstOut2 = VfGraph2.OutNeighbors(ivtx2);
 
-			// Reclassify any neighbors of the added nodes that require it
-			foreach (var inod in lstOut1)
+			// Reclassify any neighbors of the added vertices that require it
+			foreach (var ivtx in lstOut1)
 			{
-				if (((int) VfGraph1.GetGroup(inod) & (int) (Group.Disconnected | Group.ToMapping)) != 0)
+				if (((int) VfGraph1.GetGroup(ivtx) & (int) (Group.Disconnected | Group.ToMapping)) != 0)
 				{
-					btr.MoveToGroup(1, inod, Group.FromMapping, this);
+					btr.MoveToGroup(1, ivtx, Group.FromMapping, this);
 				}
 			}
-			foreach (var inod in lstIn1)
+			foreach (var ivtx in lstIn1)
 			{
-				if (((int) VfGraph1.GetGroup(inod) & (int) (Group.Disconnected | Group.FromMapping)) != 0)
+				if (((int) VfGraph1.GetGroup(ivtx) & (int) (Group.Disconnected | Group.FromMapping)) != 0)
 				{
-					btr.MoveToGroup(1, inod, Group.ToMapping, this);
+					btr.MoveToGroup(1, ivtx, Group.ToMapping, this);
 				}
 			}
-			foreach (var inod in lstOut2)
+			foreach (var ivtx in lstOut2)
 			{
-				if (((int) VfGraph2.GetGroup(inod) & (int) (Group.Disconnected | Group.ToMapping)) != 0)
+				if (((int) VfGraph2.GetGroup(ivtx) & (int) (Group.Disconnected | Group.ToMapping)) != 0)
 				{
-					btr.MoveToGroup(2, inod, Group.FromMapping, this);
+					btr.MoveToGroup(2, ivtx, Group.FromMapping, this);
 				}
 			}
-			foreach (var inod in lstIn2)
+			foreach (var ivtx in lstIn2)
 			{
-				if (((int) VfGraph2.GetGroup(inod) & (int) (Group.Disconnected | Group.FromMapping)) != 0)
+				if (((int) VfGraph2.GetGroup(ivtx) & (int) (Group.Disconnected | Group.FromMapping)) != 0)
 				{
-					btr.MoveToGroup(2, inod, Group.ToMapping, this);
+					btr.MoveToGroup(2, ivtx, Group.ToMapping, this);
 				}
 			}
 
@@ -633,7 +633,7 @@ namespace vflibcs
 				return false;
 			}
 
-			// Also check the node counts which is a different check from the total degree above...
+			// Also check the vertex counts which is a different check from the total degree above...
 			return FnCompareDegrees(lstOut1.Count, lstOut2.Count) && FnCompareDegrees(lstIn1.Count, lstIn2.Count);
 		}
 
@@ -664,12 +664,12 @@ namespace vflibcs
 		}
 
 		/// <summary>
-		/// Reclassify a node into a new group
+		/// Reclassify a vertex into a new group
 		/// </summary>
-		/// <param name="iGraph">Graph the node is being reclassified in</param>
-		/// <param name="inod">Node to reclassify</param>
-		/// <param name="grpNew">New classification for the node</param>
-		internal void MakeMove(int iGraph, int inod, Group grpNew)
+		/// <param name="iGraph">Graph the vertex is being reclassified in</param>
+		/// <param name="ivtx">Vertex to reclassify</param>
+		/// <param name="grpNew">New classification for the vertex</param>
+		internal void MakeMove(int iGraph, int ivtx, Group grpNew)
 		{
 			// Moves to the mapping are handled by the mapping arrays and aren't handled here.
 
@@ -692,7 +692,7 @@ namespace vflibcs
 			}
 
 			// Old groups and new groups
-			var igrpCur = (int) vfg.GetGroup(inod);
+			var igrpCur = (int) vfg.GetGroup(ivtx);
 			var igrpNew = (int) grpNew;
 
 			// Groups to add to and remove from
@@ -704,21 +704,21 @@ namespace vflibcs
 				// Do we need to remove from the disconnect list?
 				if ((igrpRemove & (int) Group.Disconnected) != 0)
 				{
-					disconnectedList.Delete(inod);
+					disconnectedList.Delete(ivtx);
 				}
 
-				// If we're no longer mapped from a node in the isomorphism
+				// If we're no longer mapped from a vertex in the isomorphism
 				if ((igrpRemove & (int) Group.FromMapping) != 0)
 				{
 					// Remove us from out list and decrement total out degree
-					outList.Delete(inod);
+					outList.Delete(ivtx);
 					AddToOutDegree(iGraph, -1);
 				}
-				// If we're no longer mapped into a node in the isomorphism
+				// If we're no longer mapped into a vertex in the isomorphism
 				if ((igrpRemove & (int)Group.ToMapping) != 0)
 				{
 					// Remove us from in list and decrement total out degree
-					inList.Delete(inod);
+					inList.Delete(ivtx);
 					AddToInDegree(iGraph, -1);
 				}
 			}
@@ -727,24 +727,24 @@ namespace vflibcs
 				// Add us to the disconnected group if necessary
 				if ((igrpAdd & (int) Group.Disconnected) != 0)
 				{
-					disconnectedList.Add(inod);
+					disconnectedList.Add(ivtx);
 				}
-				// If we're newly mapped from a node in the isomorphism
+				// If we're newly mapped from a vertex in the isomorphism
 				if ((igrpAdd & (int)Group.FromMapping) != 0)
 				{
 					// Add us to the out list and increment total out degree
-					outList.Add(inod);
+					outList.Add(ivtx);
 					AddToOutDegree(iGraph, 1);
 				}
-				// If we're newly mapped into a node in the isomorphism
+				// If we're newly mapped into a vertex in the isomorphism
 				if ((igrpAdd & (int) Group.ToMapping) != 0)
 				{
 					// Add us to the in list and increment total in degree
-					inList.Add(inod);
+					inList.Add(ivtx);
 					AddToInDegree(iGraph, 1);
 				}
 			}
-			vfg.SetGroup(inod, grpNew);
+			vfg.SetGroup(ivtx, grpNew);
 		}
 		#endregion
 	}
@@ -766,12 +766,12 @@ namespace vflibcs
 			private Graph VfsTestGraph1()
 			{
 				var graph = new Graph();
-				Assert.AreEqual(0, graph.InsertNode());
-				Assert.AreEqual(1, graph.InsertNode());
-				Assert.AreEqual(2, graph.InsertNode());
-				Assert.AreEqual(3, graph.InsertNode());
-				Assert.AreEqual(4, graph.InsertNode());
-				Assert.AreEqual(5, graph.InsertNode());
+				Assert.AreEqual(0, graph.InsertVertex());
+				Assert.AreEqual(1, graph.InsertVertex());
+				Assert.AreEqual(2, graph.InsertVertex());
+				Assert.AreEqual(3, graph.InsertVertex());
+				Assert.AreEqual(4, graph.InsertVertex());
+				Assert.AreEqual(5, graph.InsertVertex());
 				// Circular graph with "extra" edge at (0,3)
 				graph.InsertEdge(0, 1);
 				graph.InsertEdge(1, 2);
@@ -787,12 +787,12 @@ namespace vflibcs
 			private Graph VfsTestGraph2()
 			{
 				var graph = new Graph();
-				Assert.AreEqual(0, graph.InsertNode());
-				Assert.AreEqual(1, graph.InsertNode());
-				Assert.AreEqual(2, graph.InsertNode());
-				Assert.AreEqual(3, graph.InsertNode());
-				Assert.AreEqual(4, graph.InsertNode());
-				Assert.AreEqual(5, graph.InsertNode());
+				Assert.AreEqual(0, graph.InsertVertex());
+				Assert.AreEqual(1, graph.InsertVertex());
+				Assert.AreEqual(2, graph.InsertVertex());
+				Assert.AreEqual(3, graph.InsertVertex());
+				Assert.AreEqual(4, graph.InsertVertex());
+				Assert.AreEqual(5, graph.InsertVertex());
 				// Same graph in reverse order with slightly offset "extra" edge at (4,1)
 				graph.InsertEdge(1, 0);
 				graph.InsertEdge(2, 1);
@@ -816,8 +816,8 @@ namespace vflibcs
 				var gr1 = new Graph();
 				var gr2 = new Graph();
 
-				gr1.InsertNodes(3);
-				gr2.InsertNodes(3);
+				gr1.InsertVertices(3);
+				gr2.InsertVertices(3);
 				gr1.InsertEdge(0, 1);
 				gr1.InsertEdge(1, 2);
 				gr1.InsertEdge(2, 0);
@@ -875,18 +875,18 @@ namespace vflibcs
 				var vfs = new VfState(gr1, gr2);
 				var match = vfs.Match();
 				Assert.IsNotNull(match);			// Two empty graphs match
-				gr2.InsertNode();
+				gr2.InsertVertex();
 				vfs = new VfState(gr1, gr2);
 				match = vfs.Match();
-				Assert.IsNull(match);				// Graph with no nodes will not match one with a single isolated vertex
-				gr1.InsertNode();
+				Assert.IsNull(match);				// Graph with no vertices will not match one with a single isolated vertex
+				gr1.InsertVertex();
 				vfs = new VfState(gr1, gr2);
 				match = vfs.Match();
 				Assert.IsNotNull(match);			// Two graphs with single isolated vertices match
-				gr1.InsertNode();
+				gr1.InsertVertex();
 				vfs = new VfState(gr1, gr2);
 				match = vfs.Match();
-				Assert.IsNotNull(match);			// Two isolated nodes match with one under default subgraph isomorphism
+				Assert.IsNotNull(match);			// Two isolated vertices match with one under default subgraph isomorphism
 				gr1.InsertEdge(0, 1);
 				vfs = new VfState(gr1, gr2);
 				match = vfs.Match();
@@ -899,8 +899,8 @@ namespace vflibcs
 				var vfs = VfsTest();
 				var matches = vfs.Matches().ToArray();
 				Assert.AreEqual(1, matches.Length);
-				var dict1 = matches[0].IsomorphismNid1ToNid2;
-				var dict2 = matches[0].IsomorphismNid2ToNid1;
+				var dict1 = matches[0].IsomorphismVid1ToVid2;
+				var dict2 = matches[0].IsomorphismVid2ToVid1;
 				Assert.AreEqual(1, dict1[0]);
 				Assert.AreEqual(0, dict1[1]);
 				Assert.AreEqual(5, dict1[2]);
@@ -921,9 +921,9 @@ namespace vflibcs
 				Assert.AreEqual(0, matches.Length);
 
 				var graph1 = new Graph();
-				graph1.InsertNodes(11);
+				graph1.InsertVertices(11);
 				graph2 = new Graph();
-				graph2.InsertNodes(11);
+				graph2.InsertVertices(11);
 
 				graph1.InsertEdge(0, 2);
 				graph1.InsertEdge(0, 1);
@@ -968,8 +968,8 @@ namespace vflibcs
 				var gr1 = new Graph();
 				var gr2 = new Graph();
 
-				gr1.InsertNodes(4);
-				gr2.InsertNodes(4);
+				gr1.InsertVertices(4);
+				gr2.InsertVertices(4);
 
 				gr1.InsertEdge(0, 1);
 				gr1.InsertEdge(2, 3);
@@ -984,16 +984,16 @@ namespace vflibcs
 			public void TestMatchSubgraph()
 			{
 				// Note that "Subgraph" is defined as a graph derived from
-				// deleting nodes from another graph.  Thus, the edges
-				// between the remaining nodes must match with matches in the
-				// original graph.  Adding edges between nodes in a graph does
+				// deleting vertices from another graph.  Thus, the edges
+				// between the remaining vertices must match with matches in the
+				// original graph.  Adding edges between vertices in a graph does
 				// not constitute a supergraph under this definition.
 
 				var gr1 = new Graph();
 				var gr2 = new Graph();
 
-				gr1.InsertNodes(4);
-				gr2.InsertNodes(3);
+				gr1.InsertVertices(4);
+				gr2.InsertVertices(3);
 				gr1.InsertEdge(0, 1);
 				gr1.InsertEdge(2, 0);
 				gr1.InsertEdge(3, 0);
@@ -1009,7 +1009,7 @@ namespace vflibcs
 				vfs = new VfState(gr1, gr2);
 				matches = vfs.Matches().ToArray();
 				Assert.AreNotEqual(0, matches.Length);
-				gr1.InsertNode();
+				gr1.InsertVertex();
 				gr1.InsertEdge(6, 3);
 				gr1.InsertEdge(6, 5);
 
@@ -1037,19 +1037,19 @@ namespace vflibcs
 				const int cCols = 10;
 				var graph1 = new Graph();
 
-				graph1.InsertNodes(cRows * cCols);
+				graph1.InsertVertices(cRows * cCols);
 				for (var iRow = 0; iRow < cRows - 1; iRow++)
 				{
 					for (var iCol = 0; iCol < cCols - 1; iCol++)
 					{
-						var iNode = iCol * cRows + iRow;
-						var iNodeToCol = iNode + 1;
-						var iNodeToRow = iNode + cRows;
+						var ivtx = iCol * cRows + iRow;
+						var iVertexToCol = ivtx + 1;
+						var iVertexToRow = ivtx + cRows;
 
-						graph1.InsertEdge(iNode, iNodeToCol);
-						graph1.InsertEdge(iNode, iNodeToRow);
-						graph1.InsertEdge(iNodeToCol, iNode);
-						graph1.InsertEdge(iNodeToRow, iNode);
+						graph1.InsertEdge(ivtx, iVertexToCol);
+						graph1.InsertEdge(ivtx, iVertexToRow);
+						graph1.InsertEdge(iVertexToCol, ivtx);
+						graph1.InsertEdge(iVertexToRow, ivtx);
 					}
 				}
 				var graph2 = graph1.IsomorphicShuffling(new Random(102));
@@ -1062,61 +1062,61 @@ namespace vflibcs
 				Assert.AreNotEqual(0, matches.Length);
 			}
 
-			private class NodeColor : IContextCheck
+			private class VertexColor : IContextCheck
 			{
 				private readonly string _strColor;
 
-				public NodeColor(string strColor)
+				public VertexColor(string strColor)
 				{
 					_strColor = strColor;
 				}
 
 				public bool FCompatible(IContextCheck icc)
 				{
-					return ((NodeColor)icc)._strColor == _strColor;
+					return ((VertexColor)icc)._strColor == _strColor;
 				}
 			}
 
 			[Test]
 			public void TestContextCheck()
 			{
-				var graph1 = new Graph<NodeColor, Object>();
-				var graph2 = new Graph<NodeColor, Object>();
+				var graph1 = new Graph<VertexColor, Object>();
+				var graph2 = new Graph<VertexColor, Object>();
 
-				graph1.InsertNode(new NodeColor("Blue"));
-				graph1.InsertNode(new NodeColor("Red"));
-				graph1.InsertNode(new NodeColor("Red"));
-				graph1.InsertNode(new NodeColor("Red"));
-				graph1.InsertNode(new NodeColor("Red"));
+				graph1.InsertVertex(new VertexColor("Blue"));
+				graph1.InsertVertex(new VertexColor("Red"));
+				graph1.InsertVertex(new VertexColor("Red"));
+				graph1.InsertVertex(new VertexColor("Red"));
+				graph1.InsertVertex(new VertexColor("Red"));
 				graph1.InsertEdge(0, 1);
 				graph1.InsertEdge(1, 2);
 				graph1.InsertEdge(2, 3);
 				graph1.InsertEdge(3, 4);
 				graph1.InsertEdge(4, 0);
 
-				graph2.InsertNode(new NodeColor("Red"));
-				graph2.InsertNode(new NodeColor("Red"));
-				graph2.InsertNode(new NodeColor("Red"));
-				graph2.InsertNode(new NodeColor("Blue"));
-				graph2.InsertNode(new NodeColor("Red"));
+				graph2.InsertVertex(new VertexColor("Red"));
+				graph2.InsertVertex(new VertexColor("Red"));
+				graph2.InsertVertex(new VertexColor("Red"));
+				graph2.InsertVertex(new VertexColor("Blue"));
+				graph2.InsertVertex(new VertexColor("Red"));
 				graph2.InsertEdge(0, 1);
 				graph2.InsertEdge(1, 2);
 				graph2.InsertEdge(2, 3);
 				graph2.InsertEdge(3, 4);
 				graph2.InsertEdge(4, 0);
 
-				var vfs = new VfState<NodeColor, Object>(graph1, graph2, true);
+				var vfs = new VfState<VertexColor, Object>(graph1, graph2, true);
 				var matches = vfs.Matches().ToArray();
 				Assert.AreNotEqual(0, matches.Length);
-				var mpMatch = matches[0].IsomorphismNid1ToNid2;
+				var mpMatch = matches[0].IsomorphismVid1ToVid2;
 				// With no context checking, vertex 0 in the first graph can match
 				// vertex 0 in the second graph
 				Assert.AreEqual(0, mpMatch[0]);
 
-				vfs = new VfState<NodeColor, Object>(graph1, graph2, true, true);
+				vfs = new VfState<VertexColor, Object>(graph1, graph2, true, true);
 				matches = vfs.Matches().ToArray();
 				Assert.AreNotEqual(0, matches.Length);
-				mpMatch = matches[0].IsomorphismNid1ToNid2;
+				mpMatch = matches[0].IsomorphismVid1ToVid2;
 				// With context checking, Blue in first circular graph has to map to blue
 				// in second circular graph.
 				Assert.AreEqual(3, mpMatch[0]);

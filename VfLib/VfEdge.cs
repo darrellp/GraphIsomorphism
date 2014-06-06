@@ -5,17 +5,17 @@ namespace vflibcs
 	internal class VfEdge : IEquatable<VfEdge>
 	{
 		#region Private Variables
-		internal int InodFrom;
-		internal int InodTo;
+		internal int IvtxFrom;
+		internal int IvtxTo;
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global
 		public object ObjAttr { get; set; }
 		#endregion
 
 		#region Constructor
-		internal VfEdge(int inodFrom, int inodTo, object objAttr)
+		internal VfEdge(int ivtxFrom, int ivtxTo, object objAttr)
 		{
-			InodFrom = inodFrom;
-			InodTo = inodTo;
+			IvtxFrom = ivtxFrom;
+			IvtxTo = ivtxTo;
 			ObjAttr = objAttr;
 		}
 		#endregion
@@ -23,7 +23,7 @@ namespace vflibcs
 		#region Hashing
 		public bool Equals(VfEdge other)
 		{
-			return (other != null) && (other.InodFrom.Equals(InodFrom) && other.InodTo.Equals(InodTo));
+			return (other != null) && (other.IvtxFrom.Equals(IvtxFrom) && other.IvtxTo.Equals(IvtxTo));
 		}
 
 		// We have to use edges as dictionary keys in VfVertex.MakeInEdges/MakeOutEdges so we give
@@ -31,7 +31,7 @@ namespace vflibcs
 		public override int GetHashCode()
 		{
 			// ReSharper disable NonReadonlyFieldInGetHashCode
-			return ((InodFrom << 16) + InodTo).GetHashCode();
+			return ((IvtxFrom << 16) + IvtxTo).GetHashCode();
 			// ReSharper restore NonReadonlyFieldInGetHashCode
 		}
 		#endregion

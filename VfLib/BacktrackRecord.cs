@@ -13,7 +13,7 @@ namespace vflibcs
 	/// As we mess with the state we need to keep track of what we do so when
 	/// we backtrack we can undo.  This is the purpose of the BacktrackRecord.
 	/// There are only two actions taken in the course of a backtrack record -
-	/// matching nodes and reclassifying nodes into different groups.
+	/// matching vertices and reclassifying vertices into different groups.
 	/// </remarks>
 	class BacktrackRecord<TVAttr, TEAttr>
 	{
@@ -30,47 +30,47 @@ namespace vflibcs
 		}
 
 		/// <summary>
-		/// Propose to map inod1 from the first graph to inod2 in the second for
+		/// Propose to map ivtx1 from the first graph to ivtx2 in the second for
 		/// the isomorphism being formed
 		/// </summary>
-		/// <param name="inod1">Node index in the first graph</param>
-		/// <param name="inod2">Node index in the second graph</param>
+		/// <param name="ivtx1">Vertex index in the first graph</param>
+		/// <param name="ivtx2">Vertex index in the second graph</param>
 		/// <param name="vfs">State determining the isomorphism</param>
-		internal void SetMatch(int inod1, int inod2, VfState<TVAttr, TEAttr> vfs)
+		internal void SetMatch(int ivtx1, int ivtx2, VfState<TVAttr, TEAttr> vfs)
 		{
-			// Add both nodes to the "In Mapping" group
-			MoveToGroup(1, inod1, Group.ContainedInMapping, vfs);
-			MoveToGroup(2, inod2, Group.ContainedInMapping, vfs);
+			// Add both vertices to the "In Mapping" group
+			MoveToGroup(1, ivtx1, Group.ContainedInMapping, vfs);
+			MoveToGroup(2, ivtx2, Group.ContainedInMapping, vfs);
 
-			// Actually set the nodes to correspond in the isomorphism
-			vfs.SetIsomorphic(inod1, inod2);
+			// Actually set the vertices to correspond in the isomorphism
+			vfs.SetIsomorphic(ivtx1, ivtx2);
 
 			// Add actions to undo this act...
-			AddAction(new BacktrackAction(Action.DeleteMatch, 1, inod1));
-			AddAction(new BacktrackAction(Action.DeleteMatch, 2, inod2));
+			AddAction(new BacktrackAction(Action.DeleteMatch, 1, ivtx1));
+			AddAction(new BacktrackAction(Action.DeleteMatch, 2, ivtx2));
 		}
 
 		/// <summary>
-		/// Move node to one of the four classifications:
-		///		+ unconnected to any node in isomorphism
-		///		+ points in to node in isomorphism
-		///		+ pointed to be a node in isomorphism
+		/// Move vertex to one of the four classifications:
+		///		+ unconnected to any vertex in isomorphism
+		///		+ points in to vertex in isomorphism
+		///		+ pointed to be a vertex in isomorphism
 		///		+ in the isomorphism
-		/// Note that this call may be redundant - i.e., we may "move" a node
+		/// Note that this call may be redundant - i.e., we may "move" a vertex
 		/// to a group it's already in.  That's expected and we don't actually do
 		/// anything in that case.
 		/// </summary>
 		/// <param name="iGraph">Graph to take action on</param>
-		/// <param name="inod">Node index of node to act on</param>
-		/// <param name="grpNew">New group to potentially move node to</param>
+		/// <param name="ivtx">Vertex index of vertex to act on</param>
+		/// <param name="grpNew">New group to potentially move vertex to</param>
 		/// <param name="vfs">State determining the isomorphism</param>
 
-		internal void MoveToGroup(int iGraph, int inod, Group grpNew, VfState<TVAttr, TEAttr> vfs)
+		internal void MoveToGroup(int iGraph, int ivtx, Group grpNew, VfState<TVAttr, TEAttr> vfs)
 		{
 			var vfg = iGraph == 1 ? vfs.VfGraph1 : vfs.VfGraph2;
-			var grpOld = vfg.GetGroup(inod);
+			var grpOld = vfg.GetGroup(ivtx);
 
-			// If node is newly connected to the isomorphism, see if it was connected
+			// If vertex is newly connected to the isomorphism, see if it was connected
 			// in the opposite direction previously - if so, it's now connected both ways.
 			if (grpOld == Group.FromMapping && grpNew == Group.ToMapping ||
 				grpOld == Group.ToMapping && grpNew == Group.FromMapping)
@@ -82,8 +82,8 @@ namespace vflibcs
 			// it's recorded in the graph.
 			if (grpOld != (grpOld | grpNew))
 			{
-				AddAction(new BacktrackAction(Action.GroupMove, iGraph, inod, grpOld));
-				vfs.MakeMove(iGraph, inod, grpNew);
+				AddAction(new BacktrackAction(Action.GroupMove, iGraph, ivtx, grpOld));
+				vfs.MakeMove(iGraph, ivtx, grpNew);
 			}
 		}
 		#endregion
@@ -110,12 +110,12 @@ namespace vflibcs
 		VfState<Object, Object> VfsTest()
 		{
 			var graph1 = new Graph();
-			Assert.AreEqual(0, graph1.InsertNode());
-			Assert.AreEqual(1, graph1.InsertNode());
-			Assert.AreEqual(2, graph1.InsertNode());
-			Assert.AreEqual(3, graph1.InsertNode());
-			Assert.AreEqual(4, graph1.InsertNode());
-			Assert.AreEqual(5, graph1.InsertNode());
+			Assert.AreEqual(0, graph1.InsertVertex());
+			Assert.AreEqual(1, graph1.InsertVertex());
+			Assert.AreEqual(2, graph1.InsertVertex());
+			Assert.AreEqual(3, graph1.InsertVertex());
+			Assert.AreEqual(4, graph1.InsertVertex());
+			Assert.AreEqual(5, graph1.InsertVertex());
 			// Circular graph with "extra" edge at (0,3)
 			graph1.InsertEdge(0, 1);
 			graph1.InsertEdge(1, 2);
@@ -126,12 +126,12 @@ namespace vflibcs
 			graph1.InsertEdge(0, 3);
 
 			var graph2 = new Graph();
-			Assert.AreEqual(0, graph2.InsertNode());
-			Assert.AreEqual(1, graph2.InsertNode());
-			Assert.AreEqual(2, graph2.InsertNode());
-			Assert.AreEqual(3, graph2.InsertNode());
-			Assert.AreEqual(4, graph2.InsertNode());
-			Assert.AreEqual(5, graph2.InsertNode());
+			Assert.AreEqual(0, graph2.InsertVertex());
+			Assert.AreEqual(1, graph2.InsertVertex());
+			Assert.AreEqual(2, graph2.InsertVertex());
+			Assert.AreEqual(3, graph2.InsertVertex());
+			Assert.AreEqual(4, graph2.InsertVertex());
+			Assert.AreEqual(5, graph2.InsertVertex());
 			// Same graph in reverse order with slightly offset "extra" edge at (4,1)
 			graph2.InsertEdge(1, 0);
 			graph2.InsertEdge(2, 1);

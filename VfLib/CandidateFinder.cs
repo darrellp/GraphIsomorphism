@@ -15,7 +15,7 @@ namespace vflibcs
 		readonly int[] _graph1Candidates;
 
 		// Index of the current graph1 candidate in _graph1Candidates
-		int _iinod;
+		int _iivtx;
 
 		// Current match being attempted
 		Match _mch;
@@ -29,42 +29,42 @@ namespace vflibcs
 
 		#region Constructor
 		/// <summary>
-		/// Set the next graph1 node and graph2 nodes to attempt to match
+		/// Set the next graph1 vertex and graph2 vertices to attempt to match
 		/// </summary>
-		/// <param name="inod1">graph1 node</param>
-		/// <param name="inod2">graph2 node</param>
-		void SetInitialMatch(int inod1, int inod2)
+		/// <param name="ivtx1">graph1 vertex</param>
+		/// <param name="ivtx2">graph2 vertex</param>
+		void SetInitialMatch(int ivtx1, int ivtx2)
 		{
-			// Determine the graph2 node's degree once so we can compare it as we work our way
+			// Determine the graph2 vertex's degree once so we can compare it as we work our way
 			// through the graph1 candidates
-			_totalDegree2 = _vfs.VfGraph2.InDegree(inod2) + _vfs.VfGraph2.OutDegree(inod2);
+			_totalDegree2 = _vfs.VfGraph2.InDegree(ivtx2) + _vfs.VfGraph2.OutDegree(ivtx2);
 
 			// If our degrees don't match up properly, we can't make an isomorphism from this.
-			// This early opt out is only available because we sort nodes by degree.
-			if (!FValidDegrees(inod1, inod2))
+			// This early opt out is only available because we sort vertices by degree.
+			if (!FValidDegrees(ivtx1, ivtx2))
 			{
 				_fFailImmediately = true;
 			}
 
 			// If everything is kosher, set up the match
-			_mch = new Match(inod1, inod2);
+			_mch = new Match(ivtx1, ivtx2);
 		}
 
 		/// <summary>
-		/// Find a candidate graph2 node and the list of possible matches from graph1
+		/// Find a candidate graph2 vertex and the list of possible matches from graph1
 		/// </summary>
 		/// <remarks>
-		/// Find a candidate list from graph1 nodes for a particular graph2 node.  If we've got nodes
-		/// in both out lists, take the first graph2 node in the outlist and use all the nodes in the
+		/// Find a candidate list from graph1 vertices for a particular graph2 vertex.  If we've got vertices
+		/// in both out lists, take the first graph2 vertex in the outlist and use all the vertices in the
 		/// graph1 out list as candidates.  If that doesn't work, do the same for the two respective
-		/// in lists and finally for the nodes disconnected from the current isomorphism.
+		/// in lists and finally for the vertices disconnected from the current isomorphism.
 		/// </remarks>
-		/// <param name="vfs">State to grab nodes from</param>
+		/// <param name="vfs">State to grab vertices from</param>
 		internal CandidateFinder(VfState<TVAttr, TEAttr> vfs)
 		{
 			_vfs = vfs;
 
-			// Check to see if degrees are valid - this is only available because we sort the nodes
+			// Check to see if degrees are valid - this is only available because we sort the vertices
 			// by degree
 			if (
 				!vfs.FnCompareDegrees(vfs.LstOut1.Count, vfs.LstOut2.Count) ||
@@ -77,21 +77,21 @@ namespace vflibcs
 				return;
 			}
 
-			// Try to find a match in nodes pointed to from the isomorphism
+			// Try to find a match in vertices pointed to from the isomorphism
 			if (vfs.LstOut2.Count > 0 && vfs.LstOut1.Count > 0)
 			{
 				_graph1Candidates = new int[vfs.LstOut1.Count];
 				vfs.LstOut1.CopyTo(_graph1Candidates);
 				SetInitialMatch(vfs.LstOut1[0], vfs.LstOut2[0]);
 			}
-			// Try to find a match in nodes pointing into the isomorphism
+			// Try to find a match in vertices pointing into the isomorphism
 			else if (vfs.LstIn2.Count > 0 && vfs.LstIn1.Count > 0)
 			{
 				_graph1Candidates = new int[vfs.LstIn1.Count];
 				vfs.LstIn1.CopyTo(_graph1Candidates);
 				SetInitialMatch(vfs.LstIn1[0], vfs.LstIn2[0]);
 			}
-			// Try to find a match in nodes unattached to the isomorphism
+			// Try to find a match in vertices unattached to the isomorphism
 			else if (vfs.LstDisconnected1.Count >= 0)
 			{
 				_graph1Candidates = new int[vfs.LstDisconnected1.Count];
@@ -103,13 +103,13 @@ namespace vflibcs
 
 		#region State
 		// ReSharper disable once UnusedParameter.Local
-		bool FValidDegrees(int inod1, int inod2)
+		bool FValidDegrees(int ivtx1, int ivtx2)
 		{
 			// We must always have the degrees in graph1 at least as large as those in graph2.  Also,
-			// since we order the nodes by total degree size, when we fail this condition, we know that
-			// there are no further nodes in graph1 which will match the current graph2 node so we can
+			// since we order the vertices by total degree size, when we fail this condition, we know that
+			// there are no further vertices in graph1 which will match the current graph2 vertex so we can
 			// abandon the search.
-			return _vfs.FnCompareDegrees(_vfs.VfGraph1.InDegree(inod1) + _vfs.VfGraph1.OutDegree(inod1), _totalDegree2);
+			return _vfs.FnCompareDegrees(_vfs.VfGraph1.InDegree(ivtx1) + _vfs.VfGraph1.OutDegree(ivtx1), _totalDegree2);
 		}
 
 		internal Match NextCandidateMatch()
@@ -121,13 +121,13 @@ namespace vflibcs
 			}
 
 			// Try to move to the next graph1 candidate
-			if (_iinod < _graph1Candidates.Length)
+			if (_iivtx < _graph1Candidates.Length)
 			{
-				_mch.Inod1 = _graph1Candidates[_iinod++];
+				_mch.Ivtx1 = _graph1Candidates[_iivtx++];
 
 				// If the degrees don't match up properly then fail - nothing beyond here will
 				// work since the degrees are in decreasing size
-				if (!FValidDegrees(_mch.Inod1, _mch.Inod2))
+				if (!FValidDegrees(_mch.Ivtx1, _mch.Ivtx2))
 				{
 					return null;
 				}
@@ -151,12 +151,12 @@ namespace vflibcs
 			VfState VfsTest()
 			{
 				var graph1 = new Graph();
-				Assert.AreEqual(0, graph1.InsertNode());
-				Assert.AreEqual(1, graph1.InsertNode());
-				Assert.AreEqual(2, graph1.InsertNode());
-				Assert.AreEqual(3, graph1.InsertNode());
-				Assert.AreEqual(4, graph1.InsertNode());
-				Assert.AreEqual(5, graph1.InsertNode());
+				Assert.AreEqual(0, graph1.InsertVertex());
+				Assert.AreEqual(1, graph1.InsertVertex());
+				Assert.AreEqual(2, graph1.InsertVertex());
+				Assert.AreEqual(3, graph1.InsertVertex());
+				Assert.AreEqual(4, graph1.InsertVertex());
+				Assert.AreEqual(5, graph1.InsertVertex());
 				graph1.InsertEdge(0, 1);
 				graph1.InsertEdge(1, 2);
 				graph1.InsertEdge(2, 3);
@@ -166,12 +166,12 @@ namespace vflibcs
 				graph1.InsertEdge(0, 3);
 
 				var graph2 = new Graph();
-				Assert.AreEqual(0, graph2.InsertNode());
-				Assert.AreEqual(1, graph2.InsertNode());
-				Assert.AreEqual(2, graph2.InsertNode());
-				Assert.AreEqual(3, graph2.InsertNode());
-				Assert.AreEqual(4, graph2.InsertNode());
-				Assert.AreEqual(5, graph2.InsertNode());
+				Assert.AreEqual(0, graph2.InsertVertex());
+				Assert.AreEqual(1, graph2.InsertVertex());
+				Assert.AreEqual(2, graph2.InsertVertex());
+				Assert.AreEqual(3, graph2.InsertVertex());
+				Assert.AreEqual(4, graph2.InsertVertex());
+				Assert.AreEqual(5, graph2.InsertVertex());
 				graph2.InsertEdge(1, 0);
 				graph2.InsertEdge(2, 1);
 				graph2.InsertEdge(3, 2);
@@ -189,11 +189,11 @@ namespace vflibcs
 				var vfs = VfsTest();
 				var cf = new CandidateFinder(vfs);
 				var mch = cf.NextCandidateMatch();
-				Assert.AreEqual(0, mch.Inod1);
-				Assert.AreEqual(0, mch.Inod2);
+				Assert.AreEqual(0, mch.Ivtx1);
+				Assert.AreEqual(0, mch.Ivtx2);
 				mch = cf.NextCandidateMatch();
-				Assert.AreEqual(1, mch.Inod1);
-				Assert.AreEqual(0, mch.Inod2);
+				Assert.AreEqual(1, mch.Ivtx1);
+				Assert.AreEqual(0, mch.Ivtx2);
 			}
 		}
 	}
