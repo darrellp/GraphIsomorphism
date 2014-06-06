@@ -7,21 +7,35 @@ using NUnit.Framework;
 
 namespace vflibcs
 {
-	public class Edge<TE>
+	public class Edge<TE, TV>
+		where TE : class
+		where TV : class
 	{
 		public TE Attr;
-		public int IDFrom = Graph.VidIllegal;
-		public int IDTo = Graph.VidIllegal;
+		public int IDFrom { get; private set; }
+		public int IDTo { get; private set; }
+		public Vertex<TV, TE> From { get; private set; }
+		public Vertex<TV, TE> To { get; private set; }
+
+		public Edge(int idFrom, int idTo, Graph<TV, TE> graph)
+		{
+			IDFrom = idFrom;
+			IDTo = idTo;
+			From = graph.VertexFromPos(idFrom);
+			To = graph.VertexFromPos(idTo);
+		}
 	}
 
 	public class Vertex<TV, TE>
+		where TV : class 
+		where TE : class
 	{
 		public TV Attr;
-		public readonly SortedList<int, Edge<TE>> EdgesFrom = new SortedList<int, Edge<TE>>(); // Key is named id of "to" vertex
-		public readonly List<Edge<TE>> EdgesTo = new List<Edge<TE>>();
+		public readonly SortedList<int, Edge<TE, TV>> EdgesFrom = new SortedList<int, Edge<TE, TV>>(); // Key is named id of "to" vertex
+		public readonly List<Edge<TE, TV>> EdgesTo = new List<Edge<TE, TV>>();
 		public int ID = Graph.VidIllegal;
 
-		public Edge<TE> FindOutEdge(int vidTo)
+		public Edge<TE, TV> FindOutEdge(int vidTo)
 		{
 			try
 			{
@@ -101,6 +115,11 @@ namespace vflibcs
 		#endregion
 
 		#region Accessors
+		internal Vertex<TV, TE> VertexFromPos(int ipos)
+		{
+			return Vertices[ipos];
+		}
+
 		internal Vertex<TV, TE> FindVertex(int id)
 		{
 			var i = Vertices.IndexOfKey(id);
@@ -139,7 +158,7 @@ namespace vflibcs
 
 		public int GetInEdge(int idTo, int pos, out TE attr)
 		{
-			Edge<TE> end = null;
+			Edge<TE, TV> end = null;
 			try
 			{
 				end = FindVertex(idTo).EdgesTo[pos];
@@ -156,7 +175,7 @@ namespace vflibcs
 
 		public int GetOutEdge(int idFrom, int pos, out TE attr)
 		{
-			Edge<TE> end = null;
+			Edge<TE, TV> end = null;
 			try
 			{
 				end = FindVertex(idFrom).EdgesFrom.Values[pos];
@@ -195,12 +214,9 @@ namespace vflibcs
 
 		public void InsertEdge(int vidFrom, int vidTo, TE attr = null)
 		{
-			var end = new Edge<TE>();
+			var end = new Edge<TE, TV>(vidFrom, vidTo, this);
 			var nodFrom = FindVertex(vidFrom);
 			var nodTo = FindVertex(vidTo);
-
-			end.IDFrom = vidFrom;
-			end.IDTo = vidTo;
 			end.Attr = attr;
 			try
 			{
@@ -216,7 +232,7 @@ namespace vflibcs
 		public void DeleteVertex(int vid)
 		{
 			var nod = FindVertex(vid);
-			var arend = new Edge<TE>[nod.EdgesFrom.Count + nod.EdgesTo.Count];
+			var arend = new Edge<TE, TV>[nod.EdgesFrom.Count + nod.EdgesTo.Count];
 			nod.EdgesFrom.Values.CopyTo(arend, 0);
 			nod.EdgesTo.CopyTo(arend, nod.EdgesFrom.Count);
 
