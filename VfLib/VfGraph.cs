@@ -112,16 +112,16 @@ namespace vflibcs
 			Assert.AreEqual(3, graph.InsertVertex());
 			Assert.AreEqual(4, graph.InsertVertex());
 			Assert.AreEqual(5, graph.InsertVertex());
-			graph.InsertEdge(0, 1);
-			graph.InsertEdge(1, 2);
-			graph.InsertEdge(2, 3);
-			graph.InsertEdge(3, 4);
-			graph.InsertEdge(4, 5);
-			graph.InsertEdge(5, 0);
+			graph.AddEdge(0, 1);
+			graph.AddEdge(1, 2);
+			graph.AddEdge(2, 3);
+			graph.AddEdge(3, 4);
+			graph.AddEdge(4, 5);
+			graph.AddEdge(5, 0);
 			graph.DeleteVertex(0);
 			graph.DeleteVertex(1);
-			graph.InsertEdge(5, 2);
-			graph.InsertEdge(2, 4);
+			graph.AddEdge(5, 2);
+			graph.AddEdge(2, 4);
 
 			return new VfGraph(graph);
 		}

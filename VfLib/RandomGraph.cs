@@ -54,7 +54,7 @@ namespace vflibcs
 				{
 					continue;
 				}
-				graph.InsertEdge(ekey.From, ekey.To);
+				graph.AddEdge(ekey.From, ekey.To);
 				setEdges.Add(ekey);
 				cEdgesSoFar++;
 			}

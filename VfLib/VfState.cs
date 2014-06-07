@@ -773,13 +773,13 @@ namespace vflibcs
 				Assert.AreEqual(4, graph.InsertVertex());
 				Assert.AreEqual(5, graph.InsertVertex());
 				// Circular graph with "extra" edge at (0,3)
-				graph.InsertEdge(0, 1);
-				graph.InsertEdge(1, 2);
-				graph.InsertEdge(2, 3);
-				graph.InsertEdge(3, 4);
-				graph.InsertEdge(4, 5);
-				graph.InsertEdge(5, 0);
-				graph.InsertEdge(0, 3);
+				graph.AddEdge(0, 1);
+				graph.AddEdge(1, 2);
+				graph.AddEdge(2, 3);
+				graph.AddEdge(3, 4);
+				graph.AddEdge(4, 5);
+				graph.AddEdge(5, 0);
+				graph.AddEdge(0, 3);
 
 				return graph;
 			}
@@ -794,13 +794,13 @@ namespace vflibcs
 				Assert.AreEqual(4, graph.InsertVertex());
 				Assert.AreEqual(5, graph.InsertVertex());
 				// Same graph in reverse order with slightly offset "extra" edge at (4,1)
-				graph.InsertEdge(1, 0);
-				graph.InsertEdge(2, 1);
-				graph.InsertEdge(3, 2);
-				graph.InsertEdge(4, 3);
-				graph.InsertEdge(5, 4);
-				graph.InsertEdge(0, 5);
-				graph.InsertEdge(1, 4);
+				graph.AddEdge(1, 0);
+				graph.AddEdge(2, 1);
+				graph.AddEdge(3, 2);
+				graph.AddEdge(4, 3);
+				graph.AddEdge(5, 4);
+				graph.AddEdge(0, 5);
+				graph.AddEdge(1, 4);
 
 				return graph;
 			}
@@ -818,12 +818,12 @@ namespace vflibcs
 
 				gr1.InsertVertices(3);
 				gr2.InsertVertices(3);
-				gr1.InsertEdge(0, 1);
-				gr1.InsertEdge(1, 2);
-				gr1.InsertEdge(2, 0);
-				gr2.InsertEdge(0, 2);
-				gr2.InsertEdge(2, 1);
-				gr2.InsertEdge(1, 0);
+				gr1.AddEdge(0, 1);
+				gr1.AddEdge(1, 2);
+				gr1.AddEdge(2, 0);
+				gr2.AddEdge(0, 2);
+				gr2.AddEdge(2, 1);
+				gr2.AddEdge(1, 0);
 
 				var vfs = new VfState(gr1, gr2);
 				var matches = vfs.Matches().ToArray();
@@ -834,12 +834,12 @@ namespace vflibcs
 				matches = vfs.Matches().ToArray();
 				Assert.AreEqual(3, matches.Length);
 
-				gr2.InsertEdge(0, 1);
-				gr2.InsertEdge(1, 2);
-				gr2.InsertEdge(2, 0);
-				gr1.InsertEdge(0, 2);
-				gr1.InsertEdge(2, 1);
-				gr1.InsertEdge(1, 0);
+				gr2.AddEdge(0, 1);
+				gr2.AddEdge(1, 2);
+				gr2.AddEdge(2, 0);
+				gr1.AddEdge(0, 2);
+				gr1.AddEdge(2, 1);
+				gr1.AddEdge(1, 0);
 
 				vfs = new VfState(gr1, gr2);
 				matches = vfs.Matches().ToArray();
@@ -887,7 +887,7 @@ namespace vflibcs
 				vfs = new VfState(gr1, gr2);
 				match = vfs.Match();
 				Assert.IsNotNull(match);			// Two isolated vertices match with one under default subgraph isomorphism
-				gr1.InsertEdge(0, 1);
+				gr1.AddEdge(0, 1);
 				vfs = new VfState(gr1, gr2);
 				match = vfs.Match();
 				Assert.IsNotNull(match);			// Connect the two and a subgraph isomorphism still works
@@ -915,7 +915,7 @@ namespace vflibcs
 				Assert.AreEqual(2, dict2[5]);
 				var graph2 = VfsTestGraph2();
 				graph2.DeleteEdge(1, 4);
-				graph2.InsertEdge(2, 4);
+				graph2.AddEdge(2, 4);
 				vfs = new VfState(VfsTestGraph1(), graph2);
 				matches = vfs.Matches().ToArray();
 				Assert.AreEqual(0, matches.Length);
@@ -925,37 +925,37 @@ namespace vflibcs
 				graph2 = new Graph();
 				graph2.InsertVertices(11);
 
-				graph1.InsertEdge(0, 2);
-				graph1.InsertEdge(0, 1);
-				graph1.InsertEdge(2, 4);
-				graph1.InsertEdge(2, 5);
-				graph1.InsertEdge(1, 5);
-				graph1.InsertEdge(1, 3);
-				graph1.InsertEdge(4, 7);
-				graph1.InsertEdge(5, 7);
-				graph1.InsertEdge(5, 8);
-				graph1.InsertEdge(5, 6);
-				graph1.InsertEdge(3, 6);
-				graph1.InsertEdge(7, 10);
-				graph1.InsertEdge(6, 9);
-				graph1.InsertEdge(10, 8);
-				graph1.InsertEdge(8, 9);
+				graph1.AddEdge(0, 2);
+				graph1.AddEdge(0, 1);
+				graph1.AddEdge(2, 4);
+				graph1.AddEdge(2, 5);
+				graph1.AddEdge(1, 5);
+				graph1.AddEdge(1, 3);
+				graph1.AddEdge(4, 7);
+				graph1.AddEdge(5, 7);
+				graph1.AddEdge(5, 8);
+				graph1.AddEdge(5, 6);
+				graph1.AddEdge(3, 6);
+				graph1.AddEdge(7, 10);
+				graph1.AddEdge(6, 9);
+				graph1.AddEdge(10, 8);
+				graph1.AddEdge(8, 9);
 
-				graph2.InsertEdge(0, 1);
-				graph2.InsertEdge(0, 9);
-				graph2.InsertEdge(1, 2);
-				graph2.InsertEdge(1, 10);
-				graph2.InsertEdge(9, 10);
-				graph2.InsertEdge(9, 8);
-				graph2.InsertEdge(2, 3);
-				graph2.InsertEdge(10, 3);
-				graph2.InsertEdge(10, 5);
-				graph2.InsertEdge(10, 7);
-				graph2.InsertEdge(8, 7);
-				graph2.InsertEdge(3, 4);
-				graph2.InsertEdge(7, 6);
-				graph2.InsertEdge(4, 5);
-				graph2.InsertEdge(5, 6);
+				graph2.AddEdge(0, 1);
+				graph2.AddEdge(0, 9);
+				graph2.AddEdge(1, 2);
+				graph2.AddEdge(1, 10);
+				graph2.AddEdge(9, 10);
+				graph2.AddEdge(9, 8);
+				graph2.AddEdge(2, 3);
+				graph2.AddEdge(10, 3);
+				graph2.AddEdge(10, 5);
+				graph2.AddEdge(10, 7);
+				graph2.AddEdge(8, 7);
+				graph2.AddEdge(3, 4);
+				graph2.AddEdge(7, 6);
+				graph2.AddEdge(4, 5);
+				graph2.AddEdge(5, 6);
 
 				vfs = new VfState(graph1, graph2, true);
 				matches = vfs.Matches().ToArray();
@@ -971,10 +971,10 @@ namespace vflibcs
 				gr1.InsertVertices(4);
 				gr2.InsertVertices(4);
 
-				gr1.InsertEdge(0, 1);
-				gr1.InsertEdge(2, 3);
-				gr2.InsertEdge(2, 1);
-				gr2.InsertEdge(0, 3);
+				gr1.AddEdge(0, 1);
+				gr1.AddEdge(2, 3);
+				gr2.AddEdge(2, 1);
+				gr2.AddEdge(0, 3);
 				var vfs = new VfState(gr1, gr2);
 				var matches = vfs.Matches().ToArray();
 				Assert.AreNotEqual(0, matches.Length);
@@ -994,12 +994,12 @@ namespace vflibcs
 
 				gr1.InsertVertices(4);
 				gr2.InsertVertices(3);
-				gr1.InsertEdge(0, 1);
-				gr1.InsertEdge(2, 0);
-				gr1.InsertEdge(3, 0);
-				gr1.InsertEdge(2, 3);
-				gr2.InsertEdge(0, 1);
-				gr2.InsertEdge(2, 0);
+				gr1.AddEdge(0, 1);
+				gr1.AddEdge(2, 0);
+				gr1.AddEdge(3, 0);
+				gr1.AddEdge(2, 3);
+				gr2.AddEdge(0, 1);
+				gr2.AddEdge(2, 0);
 				var vfs = new VfState(gr1, gr2);
 				var matches = vfs.Matches().ToArray();
 				Assert.AreNotEqual(0, matches.Length);
@@ -1010,8 +1010,8 @@ namespace vflibcs
 				matches = vfs.Matches().ToArray();
 				Assert.AreNotEqual(0, matches.Length);
 				gr1.InsertVertex();
-				gr1.InsertEdge(6, 3);
-				gr1.InsertEdge(6, 5);
+				gr1.AddEdge(6, 3);
+				gr1.AddEdge(6, 5);
 
 				// Graph 2 is isomorphic to a subgraph of graph 1 (default check is for
 				// subgraph isomorphism).
@@ -1046,16 +1046,16 @@ namespace vflibcs
 						var iVertexToCol = ivtx + 1;
 						var iVertexToRow = ivtx + cRows;
 
-						graph1.InsertEdge(ivtx, iVertexToCol);
-						graph1.InsertEdge(ivtx, iVertexToRow);
-						graph1.InsertEdge(iVertexToCol, ivtx);
-						graph1.InsertEdge(iVertexToRow, ivtx);
+						graph1.AddEdge(ivtx, iVertexToCol);
+						graph1.AddEdge(ivtx, iVertexToRow);
+						graph1.AddEdge(iVertexToCol, ivtx);
+						graph1.AddEdge(iVertexToRow, ivtx);
 					}
 				}
 				var graph2 = graph1.IsomorphicShuffling(new Random(102));
 				// Insert this and you'll wait a LONG time for this test to finish...
 				// Note - the above is no longer true now that we have Degree compatibility check
-				// graph1.InsertEdge(0, cRows * cCols - 1);
+				// graph1.AddEdge(0, cRows * cCols - 1);
 
 				var vfs = new VfState(graph1, graph2, true);
 				var matches = vfs.Matches().ToArray();
@@ -1088,22 +1088,22 @@ namespace vflibcs
 				graph1.InsertVertex(new VertexColor("Red"));
 				graph1.InsertVertex(new VertexColor("Red"));
 				graph1.InsertVertex(new VertexColor("Red"));
-				graph1.InsertEdge(0, 1);
-				graph1.InsertEdge(1, 2);
-				graph1.InsertEdge(2, 3);
-				graph1.InsertEdge(3, 4);
-				graph1.InsertEdge(4, 0);
+				graph1.AddEdge(0, 1);
+				graph1.AddEdge(1, 2);
+				graph1.AddEdge(2, 3);
+				graph1.AddEdge(3, 4);
+				graph1.AddEdge(4, 0);
 
 				graph2.InsertVertex(new VertexColor("Red"));
 				graph2.InsertVertex(new VertexColor("Red"));
 				graph2.InsertVertex(new VertexColor("Red"));
 				graph2.InsertVertex(new VertexColor("Blue"));
 				graph2.InsertVertex(new VertexColor("Red"));
-				graph2.InsertEdge(0, 1);
-				graph2.InsertEdge(1, 2);
-				graph2.InsertEdge(2, 3);
-				graph2.InsertEdge(3, 4);
-				graph2.InsertEdge(4, 0);
+				graph2.AddEdge(0, 1);
+				graph2.AddEdge(1, 2);
+				graph2.AddEdge(2, 3);
+				graph2.AddEdge(3, 4);
+				graph2.AddEdge(4, 0);
 
 				var vfs = new VfState<VertexColor, Object>(graph1, graph2, true);
 				var matches = vfs.Matches().ToArray();

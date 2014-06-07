@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 #if NUNIT
 using NUnit.Framework;
 
@@ -33,13 +34,14 @@ namespace vflibcs
 		public TV Attr;
 		public readonly SortedList<int, Edge<TE, TV>> EdgesFrom = new SortedList<int, Edge<TE, TV>>(); // Key is named id of "to" vertex
 		public readonly List<Edge<TE, TV>> EdgesTo = new List<Edge<TE, TV>>();
+		public readonly List<Edge<TE, TV>> EdgesFromList = new List<Edge<TE, TV>>(); 
 		public int ID = Graph.VidIllegal;
 
 		public Edge<TE, TV> FindOutEdge(int vidTo)
 		{
 			try
 			{
-				return EdgesFrom[vidTo];
+				return EdgesFromList.FirstOrDefault(e => e.To.ID == vidTo);
 			}
 			catch (Exception)
 			{
@@ -105,9 +107,9 @@ namespace vflibcs
 				var ivtxShuffled = ariShuffle[ivtx];
 				var nod = Vertices[ivtxShuffled];
 
-				foreach (var end in nod.EdgesFrom.Values)
+				foreach (var end in nod.EdgesFromList)
 				{
-					graph.InsertEdge(ariShuffle[PosFromId(end.IDFrom)], ariShuffle[PosFromId(end.IDTo)]);
+					graph.AddEdge(ariShuffle[PosFromId(end.IDFrom)], ariShuffle[PosFromId(end.IDTo)]);
 				}
 			}
 			return graph;
@@ -153,7 +155,7 @@ namespace vflibcs
 
 		public int OutEdgeCount(int id)
 		{
-			return FindVertex(id).EdgesFrom.Count;
+			return FindVertex(id).EdgesFromList.Count;
 		}
 
 		public int GetInEdge(int idTo, int pos, out TE attr)
@@ -212,7 +214,7 @@ namespace vflibcs
 			return vid;
 		}
 
-		public void InsertEdge(int vidFrom, int vidTo, TE attr = null)
+		public void AddEdge(int vidFrom, int vidTo, TE attr = null)
 		{
 			var end = new Edge<TE, TV>(vidFrom, vidTo, this);
 			var nodFrom = FindVertex(vidFrom);
@@ -221,6 +223,7 @@ namespace vflibcs
 			try
 			{
 				nodFrom.EdgesFrom.Add(vidTo, end);
+				nodFrom.EdgesFromList.Add(end);
 				nodTo.EdgesTo.Add(end);
 			}
 			catch (Exception)
@@ -232,9 +235,9 @@ namespace vflibcs
 		public void DeleteVertex(int vid)
 		{
 			var nod = FindVertex(vid);
-			var arend = new Edge<TE, TV>[nod.EdgesFrom.Count + nod.EdgesTo.Count];
-			nod.EdgesFrom.Values.CopyTo(arend, 0);
-			nod.EdgesTo.CopyTo(arend, nod.EdgesFrom.Count);
+			var arend = new Edge<TE, TV>[nod.EdgesFromList.Count + nod.EdgesTo.Count];
+			nod.EdgesFromList.CopyTo(arend, 0);
+			nod.EdgesTo.CopyTo(arend, nod.EdgesFromList.Count);
 
 			foreach (var end in arend)
 			{
@@ -245,12 +248,18 @@ namespace vflibcs
 
 		public void DeleteEdge(int vidFrom, int vidTo)
 		{
-			var nodFrom = FindVertex(vidFrom);
-			var nodTo = FindVertex(vidTo);
-			var end = nodFrom.FindOutEdge(vidTo);
+			var vtxFrom = FindVertex(vidFrom);
+			var vtxTo = FindVertex(vidTo);
 
-			nodFrom.EdgesFrom.Remove(vidTo);
-			nodTo.EdgesTo.Remove(end);
+			var end = vtxFrom.EdgesFromList.FirstOrDefault(e => ReferenceEquals(vtxTo, e.To));
+
+			if (end == null)
+			{
+				VfException.Error("Inconsistent Data");
+			}
+			vtxFrom.EdgesFrom.Remove(vidTo);
+			vtxTo.EdgesTo.Remove(end);
+			vtxFrom.EdgesFromList.Remove(end);
 		}
 		#endregion
 	}
@@ -276,9 +285,9 @@ namespace vflibcs
 			Assert.AreEqual(0, gr.InsertVertex());
 			Assert.AreEqual(1, gr.InsertVertex());
 			Assert.AreEqual(2, gr.InsertVertex());
-			gr.InsertEdge(0, 1);
-			gr.InsertEdge(1, 2);
-			gr.InsertEdge(2, 0);
+			gr.AddEdge(0, 1);
+			gr.AddEdge(1, 2);
+			gr.AddEdge(2, 0);
 			gr.DeleteEdge(1, 2);
 			Assert.AreEqual(1, gr.OutEdgeCount(0));
 			Assert.AreEqual(0, gr.OutEdgeCount(1));
@@ -296,9 +305,9 @@ namespace vflibcs
 			Assert.AreEqual(0, gr.InsertVertex());
 			Assert.AreEqual(1, gr.InsertVertex());
 			Assert.AreEqual(2, gr.InsertVertex());
-			gr.InsertEdge(0, 1);
-			gr.InsertEdge(1, 2);
-			gr.InsertEdge(2, 0);
+			gr.AddEdge(0, 1);
+			gr.AddEdge(1, 2);
+			gr.AddEdge(2, 0);
 			gr.DeleteVertex(0);
 
 			Assert.AreEqual(1, gr.OutEdgeCount(1));
@@ -325,7 +334,7 @@ namespace vflibcs
 			var gr = new Graph();
 			var idFrom = gr.InsertVertex(0);
 			var idTo = gr.InsertVertex(1);
-			gr.InsertEdge(idFrom, idTo, 100);
+			gr.AddEdge(idFrom, idTo, 100);
 			Assert.AreEqual(gr.OutEdgeCount(idFrom), 1);
 			Assert.AreEqual(gr.OutEdgeCount(idTo), 0);
 			var idEdge = gr.GetOutEdge(idFrom, 0, out attr);
@@ -333,7 +342,7 @@ namespace vflibcs
 			Assert.AreEqual(idTo, idEdge);
 
 			// Try inserting the same edge twice to trigger exception...
-			gr.InsertEdge(0, 1, 200);
+			gr.AddEdge(0, 1, 200);
 		}
 
 		[ExpectedException(typeof (VfException))]
