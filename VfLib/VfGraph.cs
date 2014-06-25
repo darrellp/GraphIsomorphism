@@ -8,6 +8,8 @@ using NUnit.Framework;
 namespace vflibcs
 {
 	class VfGraph<TVAttr, TEAttr>
+		where TVAttr : class 
+		where TEAttr : class
 	{
 		#region Private Variables
 		readonly VfVertex<TVAttr, TEAttr>[] _arNodes;

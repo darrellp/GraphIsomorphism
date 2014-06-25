@@ -6,6 +6,8 @@ using NUnit.Framework;
 namespace vflibcs
 {
 	class CandidateFinder<TVAttr, TEAttr>
+		where TVAttr : class 
+		where TEAttr : class
 	{
 		#region Private variables
 		// State we're finding candfidate matches for

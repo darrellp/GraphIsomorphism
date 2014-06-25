@@ -17,7 +17,9 @@ namespace vflibcs
 		Disconnected = 8			// Outside the mapping with no links to mapped vertices
 	}
 
-	class VfVertex<TVAttr, TEAttr>
+	class VfVertex<TV, TE>
+		where TV : class
+		where TE : class
 	{
 		#region Private Variables
 		readonly VfEdge[] _outEdges;
@@ -27,7 +29,7 @@ namespace vflibcs
 		#endregion
 
 		#region Constructor
-		internal VfVertex(IGraphLoader<TVAttr, TEAttr> loader, int ivtxGraph, Dictionary<VfEdge, VfEdge> dctEdge, List<int> mpIvtxGraphIvtxVf)
+		internal VfVertex(IGraphLoader<TV, TE> loader, int ivtxGraph, Dictionary<VfEdge, VfEdge> dctEdge, List<int> mpIvtxGraphIvtxVf)
 		{
 			var vid = loader.IdFromPos(ivtxGraph);
 			_attribute = loader.GetVertexAttr(vid);
@@ -92,7 +94,7 @@ namespace vflibcs
 		#endregion
 
 		#region Edge Makers
-		private void MakeEdges(IGraphLoader<TVAttr, TEAttr> loader, int vid, Dictionary<VfEdge, VfEdge> dctEdge, List<int> mpIvtxGraphIvtxVf)
+		private void MakeEdges(IGraphLoader<TV, TE> loader, int vid, Dictionary<VfEdge, VfEdge> dctEdge, List<int> mpIvtxGraphIvtxVf)
 		{
 			var ivtxGraph = loader.PosFromId(vid);
 			var vfeKey = new VfEdge(mpIvtxGraphIvtxVf[ivtxGraph], 0, null);
@@ -106,11 +108,11 @@ namespace vflibcs
 		// created the first time.  dctEdge keeps track of previously created edges so we can find them on the second visit.  It has to be
 		// be maintained during the entire construction of the graph so it's created in the graph constructor and passed down a rather large
 		// call chain to be used here.
-		private void MakeOutEdges(IGraphLoader<TVAttr, TEAttr> loader, int vid, Dictionary<VfEdge, VfEdge> dctEdge, List<int> mpIvtxGraphIvtxVf, ref VfEdge vfeKey)
+		private void MakeOutEdges(IGraphLoader<TV, TE> loader, int vid, Dictionary<VfEdge, VfEdge> dctEdge, List<int> mpIvtxGraphIvtxVf, ref VfEdge vfeKey)
 		{
 			for (var i = 0; i < loader.OutEdgeCount(vid); i++)
 			{
-				TEAttr attr;
+				TE attr;
 				vfeKey.IvtxTo = mpIvtxGraphIvtxVf[loader.PosFromId(loader.GetOutEdge(vid, i, out attr))];
 
 				if (!dctEdge.ContainsKey(vfeKey))
@@ -125,11 +127,11 @@ namespace vflibcs
 			}
 		}
 
-		private void MakeInEdges(IGraphLoader<TVAttr, TEAttr> loader, int vid, Dictionary<VfEdge, VfEdge> dctEdge, List<int> mpIvtxGraphIvtxVf, ref VfEdge vfeKey)
+		private void MakeInEdges(IGraphLoader<TV, TE> loader, int vid, Dictionary<VfEdge, VfEdge> dctEdge, List<int> mpIvtxGraphIvtxVf, ref VfEdge vfeKey)
 		{
 			for (var i = 0; i < loader.InEdgeCount(vid); i++)
 			{
-				TEAttr attr;
+				TE attr;
 				vfeKey.IvtxFrom = mpIvtxGraphIvtxVf[loader.PosFromId(loader.GetInEdge(vid, i, out attr))];
 
 				if (!dctEdge.ContainsKey(vfeKey))

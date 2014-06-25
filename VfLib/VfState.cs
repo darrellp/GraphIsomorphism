@@ -14,7 +14,9 @@ namespace vflibcs
 {
 	// Struct representing a full isomorphism mapping
 
-	public class VfState<TVAttr, TEAttr>
+	public class VfState<TV, TE>
+		where TV : class 
+		where TE : class
 	{
 		#region Private Variables
 		internal const int MapIllegal = -1;
@@ -23,11 +25,13 @@ namespace vflibcs
 		// This is just the permutation to sort the original graph vertices by degrees.
 		private readonly List<int> _degreeSortedToOriginal1;
 		private readonly List<int> _degreeSortedToOriginal2;
+		private readonly Dictionary<VfVertex<TV, TE>, Vertex<TV, TE>> _mpVtxToOriginalVertex1;
+		private readonly Dictionary<VfVertex<TV, TE>, Vertex<TV, TE>> _mpVtxToOriginalVertex2;
 
 		// The original ILoader's - needed to map back the permutation
 		// to the original vertex id's after the match
-		private readonly IGraphLoader<TVAttr, TEAttr> _ldr1;
-		private readonly IGraphLoader<TVAttr, TEAttr> _ldr2;
+		private readonly IGraphLoader<TV, TE> _ldr1;
+		private readonly IGraphLoader<TV, TE> _ldr2;
 
 		// The actual mappings we're building up.  Note that in our VfGraph the ordering of vertices is based
 		// on decreasing total degree so it's not generally the same as in the original graph.  The
@@ -45,8 +49,8 @@ namespace vflibcs
 
 		#region Properties
 		// The two graphs we're comparing
-		internal VfGraph<TVAttr, TEAttr> VfGraph2 { get; set; }
-		internal VfGraph<TVAttr, TEAttr> VfGraph1 { get; set; }
+		internal VfGraph<TV, TE> VfGraph2 { get; set; }
+		internal VfGraph<TV, TE> VfGraph1 { get; set; }
 
 		// Lists of vertices not yet participating in the current isomorphism
 		// These lists are sorted on index but since the original vertices were
@@ -89,8 +93,8 @@ namespace vflibcs
 
 		#region Constructors
 		public VfState(
-			IGraphLoader<TVAttr, TEAttr> loader1,
-			IGraphLoader<TVAttr, TEAttr> loader2,
+			IGraphLoader<TV, TE> loader1,
+			IGraphLoader<TV, TE> loader2,
 			bool fIsomorphism = false,
 			bool fContextCheck = false)
 		{
@@ -118,10 +122,10 @@ namespace vflibcs
 			}
 
 			// Vertex indices in VfGraphs are sorted by vertex degree
-			_degreeSortedToOriginal1 = new CmpVertexDegrees<TVAttr, TEAttr>(loader1).Permutation;
-			_degreeSortedToOriginal2 = new CmpVertexDegrees<TVAttr, TEAttr>(loader2).Permutation;
-			VfGraph1 = new VfGraph<TVAttr, TEAttr>(loader1, _degreeSortedToOriginal1);
-			VfGraph2 = new VfGraph<TVAttr, TEAttr>(loader2, _degreeSortedToOriginal2);
+			_degreeSortedToOriginal1 = new CmpVertexDegrees<TV, TE>(loader1).Permutation;
+			_degreeSortedToOriginal2 = new CmpVertexDegrees<TV, TE>(loader2).Permutation;
+			VfGraph1 = new VfGraph<TV, TE>(loader1, _degreeSortedToOriginal1);
+			VfGraph2 = new VfGraph<TV, TE>(loader2, _degreeSortedToOriginal2);
 
 			// Set up space for isomorphism mappings
 			_vfGraphIvtx1To2Isomorphism = new Dictionary<int, int>(loader1.VertexCount);
@@ -199,8 +203,8 @@ namespace vflibcs
 				yield break;
 			}
 
-			var stkcf = new Stack<CandidateFinder<TVAttr, TEAttr>>();
-			var stkbr = new Stack<BacktrackRecord<TVAttr, TEAttr>>();
+			var stkcf = new Stack<CandidateFinder<TV, TE>>();
+			var stkbr = new Stack<BacktrackRecord<TV, TE>>();
 
 			var fBacktrack = false;
 #if GATHERSTATS
@@ -228,8 +232,8 @@ namespace vflibcs
 			//					
 			while (true)
 			{
-				CandidateFinder<TVAttr, TEAttr> cf;
-				BacktrackRecord<TVAttr, TEAttr> btr;
+				CandidateFinder<TV, TE> cf;
+				BacktrackRecord<TV, TE> btr;
 
 				// If it's time to backtrack...
 				if (fBacktrack)
@@ -262,11 +266,11 @@ namespace vflibcs
 					// graph1 vertex can be matched to the selected graph2 vertex.  At that point we
 					// will pop the candidate finder, backtrack any changes we've made and move to
 					// the next graph1 candidate in the previous candidate finder on the stack.
-					cf = new CandidateFinder<TVAttr, TEAttr>(this);
+					cf = new CandidateFinder<TV, TE>(this);
 
 					// Start a new backtracking record in case we fail to find a match for our
 					// selected graph2 vertex.
-					btr = new BacktrackRecord<TVAttr, TEAttr>();
+					btr = new BacktrackRecord<TV, TE>();
 				}
 
 				// Assume failure
@@ -402,7 +406,7 @@ namespace vflibcs
 		/// <param name="vfgr">Graph which contains the vertex</param>
 		/// <param name="grp">Classification to check for</param>
 		/// <returns>Count of vertices in list which are classified properly</returns>
-		private int GetGroupCountInList(IEnumerable<int> lstOfVertexIndices, VfGraph<TVAttr, TEAttr> vfgr, Group grp)
+		private int GetGroupCountInList(IEnumerable<int> lstOfVertexIndices, VfGraph<TV, TE> vfgr, Group grp)
 		{
 			return lstOfVertexIndices.Count(ivtx => ((int) vfgr.GetGroup(ivtx) & (int) grp) != 0);
 		}
@@ -581,7 +585,7 @@ namespace vflibcs
 		/// <param name="mtc">Proposed match</param>
 		/// <param name="btr">BacktrackRecord to record actions into</param>
 		/// <returns>True if match is locally consistent with a full isomorphism</returns>
-		private bool FAddMatchToSolution(Match mtc, BacktrackRecord<TVAttr, TEAttr> btr)
+		private bool FAddMatchToSolution(Match mtc, BacktrackRecord<TV, TE> btr)
 		{
 			var ivtx1 = mtc.Ivtx1;
 			var ivtx2 = mtc.Ivtx2;
@@ -673,7 +677,7 @@ namespace vflibcs
 		{
 			// Moves to the mapping are handled by the mapping arrays and aren't handled here.
 
-			VfGraph<TVAttr, TEAttr> vfg;
+			VfGraph<TV, TE> vfg;
 			SortedListNoValue<int> disconnectedList, outList, inList;
 
 			if (iGraph == 1)

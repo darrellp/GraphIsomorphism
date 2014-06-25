@@ -13,8 +13,8 @@ namespace vflibcs
 		where TV : class
 	{
 		public TE Attr;
-		public int IDFrom { get; private set; }
-		public int IDTo { get; private set; }
+		internal int IDFrom { get; private set; }
+		internal int IDTo { get; private set; }
 		public Vertex<TV, TE> From { get; private set; }
 		public Vertex<TV, TE> To { get; private set; }
 
@@ -56,7 +56,7 @@ namespace vflibcs
 		where TE : class
 	{
 		#region Private variables
-		internal readonly SortedList<int, Vertex<TV, TE>> Vertices = new SortedList<int, Vertex<TV, TE>>(); // Sorted by vertex id's
+		internal readonly SortedList<int, Vertex<TV, TE>> VertexList = new SortedList<int, Vertex<TV, TE>>(); // Sorted by vertex id's
 		internal const int VidIllegal = -1;
 		#endregion
 
@@ -66,7 +66,12 @@ namespace vflibcs
 		#region Properties
 		public int VertexCount
 		{
-			get { return Vertices.Count; }
+			get { return VertexList.Count; }
+		}
+
+		public IEnumerable<Vertex<TV, TE>> Vertices
+		{
+			get { return VertexList.Values.ToList(); }
 		}
 		#endregion
 
@@ -105,9 +110,9 @@ namespace vflibcs
 			for (var ivtx = 0; ivtx < VertexCount; ivtx++)
 			{
 				var ivtxShuffled = ariShuffle[ivtx];
-				var nod = Vertices[ivtxShuffled];
+				var vtx = VertexList[ivtxShuffled];
 
-				foreach (var end in nod.EdgesFromList)
+				foreach (var end in vtx.EdgesFromList)
 				{
 					graph.AddEdge(ariShuffle[PosFromId(end.IDFrom)], ariShuffle[PosFromId(end.IDTo)]);
 				}
@@ -119,15 +124,15 @@ namespace vflibcs
 		#region Accessors
 		internal Vertex<TV, TE> VertexFromPos(int ipos)
 		{
-			return Vertices[ipos];
+			return VertexList[ipos];
 		}
 
 		internal Vertex<TV, TE> FindVertex(int id)
 		{
-			var i = Vertices.IndexOfKey(id);
+			var i = VertexList.IndexOfKey(id);
 			if (i >= 0)
 			{
-				return Vertices.Values[i];
+				return VertexList.Values[i];
 			}
 			VfException.Error("Inconsistent data");
 			return null;
@@ -135,12 +140,12 @@ namespace vflibcs
 
 		public int IdFromPos(int ivtx)
 		{
-			return Vertices.Values[ivtx].ID;
+			return VertexList.Values[ivtx].ID;
 		}
 
 		public int PosFromId(int vid)
 		{
-			return Vertices.IndexOfKey(vid);
+			return VertexList.IndexOfKey(vid);
 		}
 
 		public TV GetVertexAttr(int id)
@@ -196,17 +201,17 @@ namespace vflibcs
 		#region Insertion/Deletion
 		public int InsertVertex(TV attr = null)
 		{
-			var nod = new Vertex<TV, TE> {ID = Vertices.Count, Attr = attr};
-			Vertices.Add(nod.ID, nod);
-			return nod.ID;
+			var vtx = new Vertex<TV, TE> {ID = VertexList.Count, Attr = attr};
+			VertexList.Add(vtx.ID, vtx);
+			return vtx.ID;
 		}
 
 		// ReSharper disable once UnusedMethodReturnValue.Global
-		public int InsertVertices(int cnod, TV vattr = null)
+		public int InsertVertices(int vtx, TV vattr = null)
 		{
 			var vid = InsertVertex(vattr);
 
-			for (var i = 0; i < cnod - 1; i++)
+			for (var i = 0; i < vtx - 1; i++)
 			{
 				InsertVertex(vattr);
 			}
@@ -217,14 +222,14 @@ namespace vflibcs
 		public void AddEdge(int vidFrom, int vidTo, TE attr = null)
 		{
 			var end = new Edge<TE, TV>(vidFrom, vidTo, this);
-			var nodFrom = FindVertex(vidFrom);
-			var nodTo = FindVertex(vidTo);
+			var vtxFrom = FindVertex(vidFrom);
+			var vtxTo = FindVertex(vidTo);
 			end.Attr = attr;
 			try
 			{
-				nodFrom.EdgesFrom.Add(vidTo, end);
-				nodFrom.EdgesFromList.Add(end);
-				nodTo.EdgesTo.Add(end);
+				vtxFrom.EdgesFrom.Add(vidTo, end);
+				vtxFrom.EdgesFromList.Add(end);
+				vtxTo.EdgesTo.Add(end);
 			}
 			catch (Exception)
 			{
@@ -234,23 +239,22 @@ namespace vflibcs
 
 		public void DeleteVertex(int vid)
 		{
-			var nod = FindVertex(vid);
-			var arend = new Edge<TE, TV>[nod.EdgesFromList.Count + nod.EdgesTo.Count];
-			nod.EdgesFromList.CopyTo(arend, 0);
-			nod.EdgesTo.CopyTo(arend, nod.EdgesFromList.Count);
+			var vtx = FindVertex(vid);
+			var arend = new Edge<TE, TV>[vtx.EdgesFromList.Count + vtx.EdgesTo.Count];
+			vtx.EdgesFromList.CopyTo(arend, 0);
+			vtx.EdgesTo.CopyTo(arend, vtx.EdgesFromList.Count);
 
 			foreach (var end in arend)
 			{
 				DeleteEdge(end.IDFrom, end.IDTo);
 			}
-			Vertices.Remove(nod.ID);
+			VertexList.Remove(vtx.ID);
 		}
 
 		public void DeleteEdge(int vidFrom, int vidTo)
 		{
 			var vtxFrom = FindVertex(vidFrom);
 			var vtxTo = FindVertex(vidTo);
-
 			var end = vtxFrom.EdgesFromList.FirstOrDefault(e => ReferenceEquals(vtxTo, e.To));
 
 			if (end == null)
@@ -322,8 +326,8 @@ namespace vflibcs
 		public void TestFindVertexNotFound()
 		{
 			var gr = new Graph();
-			var nod = gr.FindVertex(0);
-			Assert.IsNotNull(nod);
+			var vtx = gr.FindVertex(0);
+			Assert.IsNotNull(vtx);
 		}
 
 		[ExpectedException(typeof (VfException))]
@@ -351,10 +355,10 @@ namespace vflibcs
 		{
 			var gr = new Graph();
 			gr.InsertVertex(1);
-			var nod = gr.FindVertex(0);
-			Assert.IsNotNull(nod);
-			nod = gr.FindVertex(1);
-			Assert.IsNotNull(nod);
+			var vtx = gr.FindVertex(0);
+			Assert.IsNotNull(vtx);
+			vtx = gr.FindVertex(1);
+			Assert.IsNotNull(vtx);
 		}
 
 		[Test]

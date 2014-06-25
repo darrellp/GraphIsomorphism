@@ -1,8 +1,12 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace vflibcs
 {
 	public interface IGraphLoader<TV, TE>
+		where TV : class
+		where TE : class
 	{
 		// When vertices/edges are inserted, they are given ID's that they keep through their life.
 		// They are entered in a list and the indices in the list may not correspond to the
@@ -21,6 +25,7 @@ namespace vflibcs
 		int InEdgeCount(int cEdge);
 		int GetInEdge(int vid, int ivtxEdge, out TE attr);
 		int PosFromId(int vid);
+		IEnumerable<Vertex<TV, TE>> Vertices { get; }
 	}
 
 	public interface IGraphLoader : IGraphLoader<Object, Object> {}
