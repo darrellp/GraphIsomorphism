@@ -5,8 +5,6 @@ using System.Collections.Generic;
 namespace vflibcs
 {
 	public interface IGraphLoader<TV, TE>
-		where TV : class
-		where TE : class
 	{
 		// When vertices/edges are inserted, they are given ID's that they keep through their life.
 		// They are entered in a list and the indices in the list may not correspond to the

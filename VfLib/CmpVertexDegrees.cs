@@ -6,8 +6,6 @@ using NUnit.Framework;
 namespace vflibcs
 {
 	class CmpVertexDegrees<TV, TE> : IComparer<int>
-		where TV : class
-		where TE : class
 	{
 		#region Private Variables
 		readonly IGraphLoader<TV, TE> _loader;

@@ -18,8 +18,6 @@ namespace vflibcs
 	}
 
 	class VfVertex<TV, TE>
-		where TV : class
-		where TE : class
 	{
 		#region Private Variables
 		readonly VfEdge[] _outEdges;

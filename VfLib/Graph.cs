@@ -9,8 +9,6 @@ using NUnit.Framework;
 namespace vflibcs
 {
 	public class Edge<TE, TV>
-		where TE : class
-		where TV : class
 	{
 		public TE Attr;
 		internal int IDFrom { get; private set; }
@@ -28,8 +26,6 @@ namespace vflibcs
 	}
 
 	public class Vertex<TV, TE>
-		where TV : class 
-		where TE : class
 	{
 		public TV Attr;
 		public readonly SortedList<int, Edge<TE, TV>> EdgesFrom = new SortedList<int, Edge<TE, TV>>(); // Key is named id of "to" vertex
@@ -52,8 +48,6 @@ namespace vflibcs
 	}
 
 	public class Graph<TV, TE> : IGraphLoader<TV, TE>
-		where TV : class
-		where TE : class
 	{
 		#region Private variables
 		internal readonly SortedList<int, Vertex<TV, TE>> VertexList = new SortedList<int, Vertex<TV, TE>>(); // Sorted by vertex id's
@@ -199,7 +193,7 @@ namespace vflibcs
 		#endregion
 
 		#region Insertion/Deletion
-		public int InsertVertex(TV attr = null)
+		public int InsertVertex(TV attr = default(TV))
 		{
 			var vtx = new Vertex<TV, TE> {ID = VertexList.Count, Attr = attr};
 			VertexList.Add(vtx.ID, vtx);
@@ -207,7 +201,7 @@ namespace vflibcs
 		}
 
 		// ReSharper disable once UnusedMethodReturnValue.Global
-		public int InsertVertices(int vtx, TV vattr = null)
+		public int InsertVertices(int vtx, TV vattr = default(TV))
 		{
 			var vid = InsertVertex(vattr);
 
@@ -219,7 +213,7 @@ namespace vflibcs
 			return vid;
 		}
 
-		public void AddEdge(int vidFrom, int vidTo, TE attr = null)
+		public void AddEdge(int vidFrom, int vidTo, TE attr = default(TE))
 		{
 			var end = new Edge<TE, TV>(vidFrom, vidTo, this);
 			var vtxFrom = FindVertex(vidFrom);
