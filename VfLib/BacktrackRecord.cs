@@ -16,8 +16,6 @@ namespace vflibcs
 	/// matching vertices and reclassifying vertices into different groups.
 	/// </remarks>
 	class BacktrackRecord<TVAttr, TEAttr>
-		where TVAttr : class 
-		where TEAttr : class
 	{
 		#region Private Variables
 		// List of actions to be undone on backtrack

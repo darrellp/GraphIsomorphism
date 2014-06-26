@@ -15,8 +15,6 @@ namespace vflibcs
 	// Struct representing a full isomorphism mapping
 
 	public class VfState<TV, TE>
-		where TV : class 
-		where TE : class
 	{
 		#region Private Variables
 		internal const int MapIllegal = -1;

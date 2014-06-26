@@ -34,8 +34,6 @@ namespace vflibcs
 
 		#region Backtracking
 		internal void Backtrack<TVAttr, TEAttr>(VfState<TVAttr, TEAttr> vfs) 
-			where TVAttr : class 
-			where TEAttr : class
 		{
 			switch (_act)
 			{
