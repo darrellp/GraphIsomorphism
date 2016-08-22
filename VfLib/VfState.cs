@@ -23,8 +23,6 @@ namespace vflibcs
 		// This is just the permutation to sort the original graph vertices by degrees.
 		private readonly List<int> _degreeSortedToOriginal1;
 		private readonly List<int> _degreeSortedToOriginal2;
-		private readonly Dictionary<VfVertex<TV, TE>, Vertex<TV, TE>> _mpVtxToOriginalVertex1;
-		private readonly Dictionary<VfVertex<TV, TE>, Vertex<TV, TE>> _mpVtxToOriginalVertex2;
 
 		// The original ILoader's - needed to map back the permutation
 		// to the original vertex id's after the match

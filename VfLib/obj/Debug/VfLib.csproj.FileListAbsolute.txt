@@ -1,0 +1,7 @@
+C:\Users\darrellp\Documents\Visual Studio 2015\Projects\GitHub\GraphIsomorphism\VfLib\obj\Debug\VfLib.csprojResolveAssemblyReference.cache
+C:\Users\darrellp\Documents\Visual Studio 2015\Projects\GitHub\GraphIsomorphism\VfLib\bin\Debug\VfLib.dll
+C:\Users\darrellp\Documents\Visual Studio 2015\Projects\GitHub\GraphIsomorphism\VfLib\bin\Debug\VfLib.pdb
+C:\Users\darrellp\Documents\Visual Studio 2015\Projects\GitHub\GraphIsomorphism\VfLib\bin\Debug\nunit.framework.dll
+C:\Users\darrellp\Documents\Visual Studio 2015\Projects\GitHub\GraphIsomorphism\VfLib\bin\Debug\nunit.framework.xml
+C:\Users\darrellp\Documents\Visual Studio 2015\Projects\GitHub\GraphIsomorphism\VfLib\obj\Debug\VfLib.dll
+C:\Users\darrellp\Documents\Visual Studio 2015\Projects\GitHub\GraphIsomorphism\VfLib\obj\Debug\VfLib.pdb

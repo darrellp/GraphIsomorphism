@@ -11,10 +11,10 @@ namespace vflibcs
 	public class Edge<TE, TV>
 	{
 		public TE Attr;
-		internal int IDFrom { get; private set; }
-		internal int IDTo { get; private set; }
+		internal int IDFrom { get; }
+		internal int IDTo { get; }
 		public Vertex<TV, TE> From { get; private set; }
-		public Vertex<TV, TE> To { get; private set; }
+		public Vertex<TV, TE> To { get; }
 
 		public Edge(int idFrom, int idTo, Graph<TV, TE> graph)
 		{
@@ -58,12 +58,9 @@ namespace vflibcs
 		#endregion
 
 		#region Properties
-		public int VertexCount
-		{
-			get { return VertexList.Count; }
-		}
+		public int VertexCount => VertexList.Count;
 
-		public IEnumerable<Vertex<TV, TE>> Vertices
+	    public IEnumerable<Vertex<TV, TE>> Vertices
 		{
 			get { return VertexList.Values.ToList(); }
 		}
@@ -275,7 +272,6 @@ namespace vflibcs
 			Assert.IsNotNull(gr);
 		}
 
-		[ExpectedException(typeof (VfException))]
 		[Test]
 		public void TestDeleteEdge()
 		{
@@ -292,10 +288,9 @@ namespace vflibcs
 			Assert.AreEqual(1, gr.OutEdgeCount(2));
 
 			// Trigger the exception - no edge from 1 to 0...
-			gr.DeleteEdge(1, 0);
+			Assert.Throws(typeof(VfException), ()=>gr.DeleteEdge(1, 0));
 		}
 
-		[ExpectedException(typeof (VfException))]
 		[Test]
 		public void TestDeleteVertex()
 		{
@@ -311,20 +306,17 @@ namespace vflibcs
 			Assert.AreEqual(1, gr.OutEdgeCount(1));
 			Assert.AreEqual(0, gr.OutEdgeCount(2));
 
-			// Trigger the exception - shouldn't be a zero vertex any more...
-			gr.FindVertex(0);
+            // Trigger the exception - shouldn't be a zero vertex any more...
+            Assert.Throws(typeof(VfException), () => gr.FindVertex(0));
 		}
 
-		[ExpectedException(typeof (VfException))]
 		[Test]
 		public void TestFindVertexNotFound()
 		{
 			var gr = new Graph();
-			var vtx = gr.FindVertex(0);
-			Assert.IsNotNull(vtx);
+            Assert.Throws(typeof(VfException), () => gr.FindVertex(0));
 		}
 
-		[ExpectedException(typeof (VfException))]
 		[Test]
 		public void TestInsertEdge()
 		{
@@ -340,10 +332,9 @@ namespace vflibcs
 			Assert.AreEqual(idTo, idEdge);
 
 			// Try inserting the same edge twice to trigger exception...
-			gr.AddEdge(0, 1, 200);
-		}
+            Assert.Throws(typeof(VfException), () => gr.AddEdge(0, 1, 200));
+        }
 
-		[ExpectedException(typeof (VfException))]
 		[Test]
 		public void TestInsertVertex()
 		{
@@ -351,8 +342,7 @@ namespace vflibcs
 			gr.InsertVertex(1);
 			var vtx = gr.FindVertex(0);
 			Assert.IsNotNull(vtx);
-			vtx = gr.FindVertex(1);
-			Assert.IsNotNull(vtx);
+            Assert.Throws(typeof(VfException), () => gr.FindVertex(1));
 		}
 
 		[Test]
